@@ -6,8 +6,40 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
+	//"strconv"
 	"strings"
 )
+
+/**** NtbR *****/
+/*
+func SetField(o interface{}, fieldName string, value interface{}) {
+	es := reflect.ValueOf(o).Elem()
+	fi := es.FieldByName(fieldName)
+	if fi.IsValid() {
+		if fi.CanSet() {
+			switch value.(type) {
+			case int:
+				x := value.(int)
+				fi.SetInt(strconv.FormatInt(x, 10))
+
+			case string:
+				x := value.(string)
+				fi.SetString(x)
+			}
+		}
+	}
+}
+*/
+
+func GetField(o interface{}, fieldName string) (reflect.Value, bool) {
+	es := reflect.ValueOf(o).Elem()
+	fi := es.FieldByName(fieldName)
+	if fi.IsValid() {
+		return fi, true
+	}
+	return fi, false
+}
 
 func PathDefault(removeSlash bool) string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
