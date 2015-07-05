@@ -3,6 +3,7 @@ package toolkit
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"net"
 	"os"
 	"path/filepath"
@@ -31,6 +32,22 @@ func SetField(o interface{}, fieldName string, value interface{}) {
 	}
 }
 */
+
+func GetJsonString(o interface{}) string {
+	bs, e := json.MarshalIndent(o, "", "\t")
+	if e != nil {
+		return "{}"
+	}
+	return string(bs)
+}
+
+func MapToSlice(objects map[string]interface{}) []interface{} {
+	results := make([]interface{}, 0)
+	for _, v := range objects {
+		results = append(results, v)
+	}
+	return results
+}
 
 func GetField(o interface{}, fieldName string) (reflect.Value, bool) {
 	es := reflect.ValueOf(o).Elem()
