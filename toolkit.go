@@ -32,13 +32,18 @@ func SetField(o interface{}, fieldName string, value interface{}) {
 	}
 }
 */
-
 func GetJsonString(o interface{}) string {
 	bs, e := json.MarshalIndent(o, "", "\t")
 	if e != nil {
 		return "{}"
 	}
 	return string(bs)
+}
+
+func GetObjFromString(s string, result interface{}) error {
+	b := []byte(s)
+	e := json.Unmarshal(b, result)
+	return e
 }
 
 func MapToSlice(objects map[string]interface{}) []interface{} {
