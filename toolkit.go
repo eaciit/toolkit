@@ -12,6 +12,13 @@ import (
 	"strings"
 )
 
+type M map[string]interface{}
+
+func (m M) Set(key string, value interface{}) M {
+	m[key] = value
+	return m
+}
+
 /**** NtbR *****/
 /*
 func SetField(o interface{}, fieldName string, value interface{}) {
