@@ -12,6 +12,25 @@ import (
 	"strings"
 )
 
+type M map[string]interface{}
+
+func (m M) Set(k string, v interface{}) M {
+	m[k] = v
+	return m
+}
+
+func (m M) Get(k string, d interface{}) interface{} {
+	if m.Has(k) == false {
+		m[k] = d
+	}
+	return m[k]
+}
+
+func (m M) Has(k string) bool {
+	_, has := m[k]
+	return has
+}
+
 /**** NtbR *****/
 /*
 func SetField(o interface{}, fieldName string, value interface{}) {
