@@ -65,6 +65,14 @@ func GetObjFromString(s string, result interface{}) error {
 	return e
 }
 
+func VariadicToSlice(objs ...interface{}) *[]interface{} {
+	result := []interface{}{}
+	for _, v := range objs {
+		result = append(result, v)
+	}
+	return &result
+}
+
 func MapToSlice(objects map[string]interface{}) []interface{} {
 	results := make([]interface{}, 0)
 	for _, v := range objects {
