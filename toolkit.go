@@ -82,6 +82,11 @@ func MapToSlice(objects map[string]interface{}) []interface{} {
 }
 
 func GetField(o interface{}, fieldName string) (reflect.Value, bool) {
+	_ = "breakpoint"
+	ref := reflect.ValueOf(o)
+	if !ref.IsValid() {
+		return ref, false
+	}
 	es := reflect.ValueOf(o).Elem()
 	fi := es.FieldByName(fieldName)
 	if fi.IsValid() {
