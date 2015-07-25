@@ -31,27 +31,104 @@ func (m M) Has(k string) bool {
 	return has
 }
 
-/**** NtbR *****/
-/*
-func SetField(o interface{}, fieldName string, value interface{}) {
-	es := reflect.ValueOf(o).Elem()
-	fi := es.FieldByName(fieldName)
-	if fi.IsValid() {
-		if fi.CanSet() {
-			switch value.(type) {
-			case int:
-				x := value.(int)
-				fi.SetInt(strconv.FormatInt(x, 10))
+func HasMember(g []interface{}, find interface{}) bool {
+	found := false
+	for _, v := range g {
+		if v == find {
+			return true
+		}
+	}
+	return found
+}
 
-			case string:
-				x := value.(string)
-				fi.SetString(x)
+func Id(i interface{}) interface{} {
+	idFields := []interface{}{"_id", "ID", "Id", "id"}
+	rv := reflect.ValueOf(i)
+
+	//-- get key
+	found := false
+	var id interface{}
+	if rv.Kind() == reflect.Map {
+		mapkeys := rv.MapKeys()
+		for _, mapkey := range mapkeys {
+			idkey := mapkey.String()
+			if HasMember(idFields, idkey) {
+				idValue := rv.MapIndex(mapkey)
+				if idValue.IsValid() {
+					found = true
+					id = idValue.Interface()
+				}
+			}
+		}
+	} else if rv.Kind() == reflect.Struct {
+		for _, idkey := range idFields {
+			idValue := rv.FieldByName(idkey.(string))
+			if idValue.IsValid() {
+				found = true
+				id = idValue.Interface()
 			}
 		}
 	}
+
+	if found {
+		return id
+	} else {
+		return nil
+	}
 }
-*/
-func GetJsonString(o interface{}) string {
+
+func Value(i interface{}, fieldName string, def interface{}) interface{} {
+	rv := reflect.ValueOf(i)
+	var ret interface{}
+	found := false
+	if rv.Kind() == reflect.Map {
+		mapkeys := rv.MapKeys()
+		for i := 0; i < len(mapkeys) && !found; i++ {
+			mapkey := mapkeys[i]
+			mapkeyname := mapkey.String()
+			if mapkeyname == fieldName {
+				found = true
+				mapvalue := rv.MapIndex(mapkey)
+				if mapvalue.IsNil() {
+					ret = def
+				} else {
+					ret = mapvalue.Interface()
+				}
+			}
+		}
+	} else if rv.Kind() == reflect.Struct {
+		fv := rv.FieldByName(fieldName)
+		if fv.IsValid() {
+			found = true
+			if (fv.Kind() == reflect.Struct || fv.Kind() == reflect.Map) && fv.IsNil() {
+				ret = def
+			} else {
+				ret = fv.Interface()
+			}
+		}
+	}
+
+	if !found {
+		return def
+	} else {
+		return ret
+	}
+}
+
+func Field(o interface{}, fieldName string) (reflect.Value, bool) {
+	ref := reflect.ValueOf(o)
+	if !ref.IsValid() {
+		return ref, false
+	}
+	es := ref.Elem()
+	fi := es.FieldByName(fieldName)
+	if fi.IsValid() {
+		return fi, true
+	}
+	return fi, false
+}
+
+func JsonString(o interface{}) string {
 	bs, e := json.MarshalIndent(o, "", "\t")
 	if e != nil {
 		return "{}"
@@ -59,7 +136,7 @@ func GetJsonString(o interface{}) string {
 	return string(bs)
 }
 
-func GetObjFromString(s string, result interface{}) error {
+func ObjFromString(s string, result interface{}) error {
 	b := []byte(s)
 	e := json.Unmarshal(b, result)
 	return e
@@ -79,20 +156,6 @@ func MapToSlice(objects map[string]interface{}) []interface{} {
 		results = append(results, v)
 	}
 	return results
-}
-
-func GetField(o interface{}, fieldName string) (reflect.Value, bool) {
-	_ = "breakpoint"
-	ref := reflect.ValueOf(o)
-	if !ref.IsValid() {
-		return ref, false
-	}
-	es := reflect.ValueOf(o).Elem()
-	fi := es.FieldByName(fieldName)
-	if fi.IsValid() {
-		return fi, true
-	}
-	return fi, false
 }
 
 func PathDefault(removeSlash bool) string {
