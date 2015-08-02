@@ -10,6 +10,7 @@ import (
 	"reflect"
 	//"strconv"
 	"strings"
+	"time"
 )
 
 type M map[string]interface{}
@@ -39,6 +40,16 @@ func HasMember(g []interface{}, find interface{}) bool {
 		}
 	}
 	return found
+}
+
+func MakeDate(layout string, value string) time.Time {
+	t, e := time.Parse(layout, value)
+	if e != nil {
+		t, _ = time.Parse("2-Jan-2006", "1-Jan-1900")
+		return t
+	} else {
+		return t
+	}
 }
 
 func Id(i interface{}) interface{} {
