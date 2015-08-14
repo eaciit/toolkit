@@ -21,10 +21,11 @@ func (m M) Set(k string, v interface{}) M {
 }
 
 func (m M) Get(k string, d interface{}) interface{} {
-	if m.Has(k) == false {
-		m[k] = d
+	if get, b := m[k]; b {
+		return get
+	} else {
+		return d
 	}
-	return m[k]
 }
 
 func (m M) Has(k string) bool {
