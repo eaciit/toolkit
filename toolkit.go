@@ -11,6 +11,7 @@ import (
 	//"strconv"
 	"strings"
 	"time"
+	"fmt"
 )
 
 type M map[string]interface{}
@@ -54,6 +55,7 @@ func MakeDate(layout string, value string) time.Time {
 }
 
 func Id(i interface{}) interface{} {
+	//_ = "breakpoint"
 	idFields := []interface{}{"_id", "ID", "Id", "id"}
 	rv := reflect.ValueOf(i)
 
@@ -80,6 +82,18 @@ func Id(i interface{}) interface{} {
 				id = idValue.Interface()
 			}
 		}
+	} else if rv.Kind()==reflect.Ptr{
+		elem := rv.Elem()
+		for _, idkey := range idFields {
+			idValue := elem.FieldByName(idkey.(string))
+			if idValue.IsValid() {
+				found = true
+				id = idValue.Interface()
+			}
+		}
+	} else {
+		_ = "breakpoint"
+		fmt.Printf("Kind: %s \n",rv.Kind().String())
 	}
 
 	if found {
@@ -118,7 +132,7 @@ func Value(i interface{}, fieldName string, def interface{}) interface{} {
 				ret = fv.Interface()
 			}
 		}
-	}
+	} 
 
 	if !found {
 		return def
