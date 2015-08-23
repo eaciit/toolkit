@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"reflect"
 	//"strconv"
+	"fmt"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type M map[string]interface{}
@@ -54,6 +54,11 @@ func MakeDate(layout string, value string) time.Time {
 	}
 }
 
+func AddTime(dt0 time.Time, dt1 time.Time) time.Time {
+	dtx := dt0
+	return dtx.Add(dt1.Sub(MakeDate("03:04", "00:00")))
+}
+
 func Id(i interface{}) interface{} {
 	//_ = "breakpoint"
 	idFields := []interface{}{"_id", "ID", "Id", "id"}
@@ -82,7 +87,7 @@ func Id(i interface{}) interface{} {
 				id = idValue.Interface()
 			}
 		}
-	} else if rv.Kind()==reflect.Ptr{
+	} else if rv.Kind() == reflect.Ptr {
 		elem := rv.Elem()
 		for _, idkey := range idFields {
 			idValue := elem.FieldByName(idkey.(string))
@@ -93,7 +98,7 @@ func Id(i interface{}) interface{} {
 		}
 	} else {
 		_ = "breakpoint"
-		fmt.Printf("Kind: %s \n",rv.Kind().String())
+		fmt.Printf("Kind: %s \n", rv.Kind().String())
 	}
 
 	if found {
@@ -132,7 +137,7 @@ func Value(i interface{}, fieldName string, def interface{}) interface{} {
 				ret = fv.Interface()
 			}
 		}
-	} 
+	}
 
 	if !found {
 		return def
