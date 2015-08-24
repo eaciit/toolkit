@@ -21,11 +21,59 @@ func (m M) Set(k string, v interface{}) M {
 	return m
 }
 
-func (m M) Get(k string, d interface{}) interface{} {
+func (m M) Get(k string, d ...interface{}) interface{} {
 	if get, b := m[k]; b {
 		return get
 	} else {
-		return d
+		if len(d) > 0 {
+			return d[0]
+		} else {
+			return nil
+		}
+	}
+}
+
+func (m M) GetInt(k string) int {
+	i := m.Get(k, 0)
+	switch i.(type) {
+	case int:
+		return i.(int)
+	case int32, int64:
+		return int(i.(int64))
+	case float32:
+		return int(i.(float32))
+	case float64:
+		return int(i.(float64))
+	default:
+		return 0
+	}
+}
+
+func (m M) GetFloat32(k string) float32 {
+	i := m.Get(k, 0)
+	switch i.(type) {
+	case int, int32, int64:
+		return float32(i.(int))
+	case float32:
+		return i.(float32)
+	case float64:
+		return float32(i.(float64))
+	default:
+		return 0
+	}
+}
+
+func (m M) GetFloat64(k string) float64 {
+	i := m.Get(k, 0)
+	switch i.(type) {
+	case int, int32, int64:
+		return float64(i.(int))
+	case float32:
+		return float64(i.(float32))
+	case float64:
+		return i.(float64)
+	default:
+		return 0
 	}
 }
 
