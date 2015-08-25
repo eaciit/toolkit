@@ -145,7 +145,7 @@ func Id(i interface{}) interface{} {
 			}
 		}
 	} else {
-		_ = "breakpoint"
+		//_ = "breakpoint"
 		fmt.Printf("Kind: %s \n", rv.Kind().String())
 	}
 
@@ -208,7 +208,7 @@ func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 }
 
 func JsonString(o interface{}) string {
-	bs, e := json.MarshalIndent(o, "", "\t")
+	bs, e := json.Marshal(o)
 	if e != nil {
 		return "{}"
 	}
