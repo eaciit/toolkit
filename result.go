@@ -18,6 +18,12 @@ type Result struct {
 	Data     interface{}
 }
 
+func NewResult() *Result {
+	r := new(Result)
+	r.Status = Status_OK
+	return r
+}
+
 func (a *Result) Run(f func(data interface{}) (interface{}, error), parm interface{}) *Result {
 	t0 := time.Now()
 	a.Status = Status_OK
