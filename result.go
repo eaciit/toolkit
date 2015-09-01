@@ -24,6 +24,16 @@ func NewResult() *Result {
 	return r
 }
 
+func (r *Result) SetError(e error) {
+	r.Status = Status_NOK
+	r.Message = e.Error()
+}
+
+func (r *Result) SetErrorTxt(e string) {
+	r.Status = Status_NOK
+	r.Message = e
+}
+
 func (a *Result) Run(f func(data interface{}) (interface{}, error), parm interface{}) *Result {
 	t0 := time.Now()
 	a.Status = Status_OK
