@@ -10,6 +10,7 @@ import (
 	"reflect"
 	//"strconv"
 	"fmt"
+	. "strconv"
 	"strings"
 	"time"
 )
@@ -33,9 +34,32 @@ func (m M) Get(k string, d ...interface{}) interface{} {
 	}
 }
 
+func (m *M) Cast(k string, d interface{}) error {
+	var e error
+	if m.Has(k) == false {
+		return fmt.Errorf("No data for key %s", k)
+	}
+	b, e := json.Marshal(m.Get(k, nil))
+	if e != nil {
+		return e
+	}
+	e = json.Unmarshal(b, d)
+	return e
+}
+
 func (m M) GetInt(k string) int {
 	i := m.Get(k, 0)
+	return ToInt(i)
+}
+
+func ToInt(i interface{}) int {
 	switch i.(type) {
+	case string:
+		iv, e := Atoi(i.(string))
+		if e != nil {
+			return 0
+		}
+		return iv
 	case int:
 		return i.(int)
 	case int32, int64:
@@ -49,9 +73,22 @@ func (m M) GetInt(k string) int {
 	}
 }
 
+func (m *M) Unset(k string) {
+	delete(*m, k)
+}
+
 func (m M) GetFloat32(k string) float32 {
 	i := m.Get(k, 0)
+	return ToFloat32(i)
+}
+func ToFloat32(i interface{}) float32 {
 	switch i.(type) {
+	case string:
+		f32, e := ParseFloat(i.(string), 32)
+		if e == nil {
+			return 0
+		}
+		return float32(f32)
 	case int, int32, int64:
 		return float32(i.(int))
 	case float32:
@@ -65,7 +102,16 @@ func (m M) GetFloat32(k string) float32 {
 
 func (m M) GetFloat64(k string) float64 {
 	i := m.Get(k, 0)
+	return ToFloat64(i)
+}
+func ToFloat64(i interface{}) float64 {
 	switch i.(type) {
+	case string:
+		f64, e := ParseFloat(i.(string), 64)
+		if e == nil {
+			return 0
+		}
+		return f64
 	case int, int32, int64:
 		return float64(i.(int))
 	case float32:
