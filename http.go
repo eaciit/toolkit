@@ -9,13 +9,18 @@ import (
 	"net/http"
 )
 
-func httpCall(url string, callType string, datas []T,
+func HttpCall(url string, callType string, datas []M,
 	useAuth bool, userName string, password string) (*http.Response, error) {
+	var err error
+
 	//-- preparing cookie jar and http client
-	jar, err := cookiejar.New(nil)
-	client := &http.Client{
-		Jar: jar,
-	}
+	/*
+		jar, err := cookiejar.New(nil)
+		client := &http.Client{
+			Jar: jar,
+		}
+	*/
+	client := &http.Client{}
 
 	//-- GET
 	var resp *http.Response
@@ -27,13 +32,15 @@ func httpCall(url string, callType string, datas []T,
 	if useAuth == true {
 		req.SetBasicAuth(userName, password)
 	}
-	if dbSessionId != "" {
-		expire := time.Time{}
-		cookieSession := http.Cookie{"OSESSIONID", dbSessionId, "/", url,
-			expire, expire.Format(time.UnixDate), 86400, true, true,
-			"OSESSIONID=" + dbSessionId, []string{"OSESSIONID=" + dbSessionId}}
-		req.AddCookie(&cookieSession)
-	}
+	/*
+		if dbSessionId != "" {
+			expire := time.Time{}
+			cookieSession := http.Cookie{"OSESSIONID", dbSessionId, "/", url,
+				expire, expire.Format(time.UnixDate), 86400, true, true,
+				"OSESSIONID=" + dbSessionId, []string{"OSESSIONID=" + dbSessionId}}
+			req.AddCookie(&cookieSession)
+		}
+	*/
 	resp, err = client.Do(req)
 	return resp, err
 }
@@ -45,14 +52,13 @@ func HttpContent(r *http.Response) []byte {
 }
 
 func HttpContentM(r *http.Response) M {
-	bytes := getContent(r)
+	bytes := HttpContent(r)
 	obj := M{}
 	_ = json.Unmarshal(bytes, &obj)
 	return obj
 }
 
-func HttpContentString(r *http.Response) Obj {
-	bytes := getContent(r)
-	obj := string(bytes)
-	return obj
+func HttpContentString(r *http.Response) string {
+	bytes := HttpContent(r)
+	return string(bytes)
 }
