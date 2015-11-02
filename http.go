@@ -1,5 +1,8 @@
 package toolkit
 
+/*
+Http related
+*/
 import (
 	"encoding/json"
 	"io/ioutil"
