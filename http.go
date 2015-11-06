@@ -20,15 +20,17 @@ func HttpCall(url string, callType string, datas []M,
 			Jar: jar,
 		}
 	*/
-	client := &http.Client{}
+	client := new(http.Client)
 
 	//-- GET
 	var resp *http.Response
 	var req *http.Request
-	if callType == "GET" {
-		resp, err = client.Get(url)
-		req, err = http.NewRequest(callType, url, nil)
+
+	req, err = http.NewRequest(callType, url, nil)
+	if err != nil {
+		return nil, err
 	}
+
 	if useAuth == true {
 		req.SetBasicAuth(userName, password)
 	}
@@ -41,6 +43,7 @@ func HttpCall(url string, callType string, datas []M,
 			req.AddCookie(&cookieSession)
 		}
 	*/
+
 	resp, err = client.Do(req)
 	return resp, err
 }
