@@ -16,6 +16,7 @@ import (
 )
 
 type M map[string]interface{}
+type Ms []M
 
 func (m M) Set(k string, v interface{}) M {
 	m[k] = v
