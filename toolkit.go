@@ -15,43 +15,6 @@ import (
 	"time"
 )
 
-type M map[string]interface{}
-
-func (m M) Set(k string, v interface{}) M {
-	m[k] = v
-	return m
-}
-
-func (m M) Get(k string, d ...interface{}) interface{} {
-	if get, b := m[k]; b {
-		return get
-	} else {
-		if len(d) > 0 {
-			return d[0]
-		} else {
-			return nil
-		}
-	}
-}
-
-func (m *M) Cast(k string, d interface{}) error {
-	var e error
-	if m.Has(k) == false {
-		return fmt.Errorf("No data for key %s", k)
-	}
-	b, e := json.Marshal(m.Get(k, nil))
-	if e != nil {
-		return e
-	}
-	e = json.Unmarshal(b, d)
-	return e
-}
-
-func (m M) GetInt(k string) int {
-	i := m.Get(k, 0)
-	return ToInt(i)
-}
-
 func ToInt(i interface{}) int {
 	switch i.(type) {
 	case string:
@@ -73,14 +36,6 @@ func ToInt(i interface{}) int {
 	}
 }
 
-func (m *M) Unset(k string) {
-	delete(*m, k)
-}
-
-func (m M) GetFloat32(k string) float32 {
-	i := m.Get(k, 0)
-	return ToFloat32(i)
-}
 func ToFloat32(i interface{}) float32 {
 	switch i.(type) {
 	case string:
@@ -121,11 +76,6 @@ func ToFloat64(i interface{}) float64 {
 	default:
 		return 0
 	}
-}
-
-func (m M) Has(k string) bool {
-	_, has := m[k]
-	return has
 }
 
 func HasMember(g []interface{}, find interface{}) bool {
