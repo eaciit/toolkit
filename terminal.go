@@ -1,9 +1,9 @@
 package toolkit
 
 import (
-	"io/ioutil"
+	//"io/ioutil"
 	"os/exec"
-	"time"
+	//"time"
 )
 
 func RunCommand(cmd string, parm ...string) (string, error) {
@@ -26,6 +26,7 @@ type AsyncCommand struct {
 	channelStopInput chan bool
 }
 
+/*
 func (a *AsyncCommand) Run() {
 	var e error
 
@@ -79,3 +80,4 @@ func (a *AsyncCommand) Run() {
 	a.Error = nil
 	a.Output = outs
 }
+*/

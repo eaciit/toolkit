@@ -4,48 +4,77 @@ package toolkit
 Http related
 */
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
+	"strings"
 )
 
-func HttpCall(url string, callType string, datas []M,
-	useAuth bool, userName string, password string) (*http.Response, error) {
+func HttpCall(url string, callType string,
+	datas []byte,
+	config M) (*http.Response, error) {
 	var err error
+	if config == nil {
+		config = M{}
+	}
 
-	//-- preparing cookie jar and http client
-	/*
-		jar, err := cookiejar.New(nil)
-		client := &http.Client{
-			Jar: jar,
-		}
-	*/
-	client := new(http.Client)
-
-	//-- GET
-	var resp *http.Response
 	var req *http.Request
 
-	req, err = http.NewRequest(callType, url, nil)
+	//-- GET
+	if datas == nil || len(datas) == 0 {
+		req, err = http.NewRequest(callType, url, nil)
+	} else {
+		rdr := bytes.NewReader(datas)
+		req, err = http.NewRequest(callType, url, rdr)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	if useAuth == true {
-		req.SetBasicAuth(userName, password)
-	}
-	/*
-		if dbSessionId != "" {
-			expire := time.Time{}
-			cookieSession := http.Cookie{"OSESSIONID", dbSessionId, "/", url,
-				expire, expire.Format(time.UnixDate), 86400, true, true,
-				"OSESSIONID=" + dbSessionId, []string{"OSESSIONID=" + dbSessionId}}
-			req.AddCookie(&cookieSession)
+	if config.Has("auth") {
+		authType := strings.ToLower(config.Get("auth", "").(string))
+		if authType == "basic" {
+			username := config.Get("user", "").(string)
+			pass := config.Get("password", "").(string)
+			req.SetBasicAuth(username, pass)
 		}
-	*/
+	}
 
-	resp, err = client.Do(req)
-	return resp, err
+	return httpcall(req, config)
+}
+
+func httpcall(req *http.Request, config M) (*http.Response, error) {
+	var client *http.Client
+
+	//-- handling cookie
+	if config.Has("cookie") == false {
+		client = new(http.Client)
+	} else {
+		//-- preparing cookie jar and http client
+		jar, err := cookiejar.New(nil)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to initialize cookie jar: %s", err.Error())
+		}
+		client = &http.Client{
+			Jar: jar,
+		}
+	}
+
+	//--- handling header
+	if headers, hasHeaders := config["headers"]; hasHeaders {
+		mHeaders := headers.(M)
+		for k, v := range mHeaders {
+			req.Header.Add(k, v.(string))
+		}
+	}
+
+	var resp *http.Response
+	var errCall error
+	resp, errCall = client.Do(req)
+	return resp, errCall
 }
 
 func HttpContent(r *http.Response) []byte {
