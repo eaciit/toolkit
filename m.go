@@ -32,7 +32,7 @@ func ToM(v interface{}) (M, error) {
 	}
 
 	m := M{}
-	e = json.Unmarshal(bs, m)
+	e = json.Unmarshal(bs, &m)
 	if e != nil {
 		return m, fmt.Errorf("Unable to uncast to M from bytes: " + e.Error())
 	}
