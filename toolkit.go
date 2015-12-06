@@ -203,15 +203,25 @@ func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	return fi, false
 }
 
-func JsonString(o interface{}) string {
+func Jsonify(o interface{}) []byte {
 	bs, e := json.Marshal(o)
 	if e != nil {
-		return "{}"
+		bs, _ = json.Marshal(struct{}{})
 	}
+	return bs
+}
+
+func JsonString(o interface{}) string {
+	bs := Jsonify(o)
 	return string(bs)
 }
 
-func ObjFromString(s string, result interface{}) error {
+func Unjson(b []byte, result interface{}) error {
+	e := json.Unmarshal(b, result)
+	return e
+}
+
+func UnjsonFromString(s string, result interface{}) error {
 	b := []byte(s)
 	e := json.Unmarshal(b, result)
 	return e

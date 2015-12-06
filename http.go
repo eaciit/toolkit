@@ -27,7 +27,8 @@ func HttpCall(url string, callType string,
 	if datas == nil || len(datas) == 0 {
 		req, err = http.NewRequest(callType, url, nil)
 	} else {
-		rdr := bytes.NewReader(datas)
+		//fmt.Printf("Datas: %v\n%s \n", datas, string(datas))
+		rdr := bytes.NewBuffer(datas)
 		req, err = http.NewRequest(callType, url, rdr)
 	}
 	if err != nil {
