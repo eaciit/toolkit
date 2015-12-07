@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"errors"
 	"time"
 )
 
@@ -32,6 +33,14 @@ func (r *Result) SetError(e error) {
 func (r *Result) SetErrorTxt(e string) {
 	r.Status = Status_NOK
 	r.Message = e
+}
+
+func (r *Result) Error() error {
+	var e error
+	if r.Status == Status_NOK {
+		e = errors.New(r.Message)
+	}
+	return e
 }
 
 func (a *Result) Run(f func(data interface{}) (interface{}, error), parm interface{}) *Result {
