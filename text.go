@@ -7,7 +7,7 @@ func randChars() string {
 		alphabets := "abcdefghijklmnopqrstuvwxyz"
 		alphabetsCap := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		numerics := "0123456789"
-		whitespaces := "!@#$%^&*-_+"
+		whitespaces := "!@#$^&*-_+"
 		_randChars = alphabets + numerics + alphabetsCap + whitespaces
 	}
 	return _randChars
