@@ -75,8 +75,10 @@ func httpcall(req *http.Request, config M) (*http.Response, error) {
 	var resp *http.Response
 	var errCall error
 	resp, errCall = client.Do(req)
-	if expectedStatus := config.Get("expectedstatus", 0).(int); expectedStatus != 0 && resp.StatusCode != expectedStatus {
-		return nil, fmt.Errorf("Code error: " + resp.Status)
+	if errCall == nil {
+		if expectedStatus := config.Get("expectedstatus", 0).(int); expectedStatus != 0 && resp.StatusCode != expectedStatus {
+			return nil, fmt.Errorf("Code error: " + resp.Status)
+		}
 	}
 	return resp, errCall
 }

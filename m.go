@@ -66,6 +66,11 @@ func (m *M) Cast(k string, d interface{}) error {
 	return e
 }
 
+func (m M) GetString(k string) string {
+	s := m.Get(k, "")
+	return s.(string)
+}
+
 func (m M) GetInt(k string) int {
 	i := m.Get(k, 0)
 	return ToInt(i)
