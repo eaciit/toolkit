@@ -43,6 +43,27 @@ func (r *Result) Error() error {
 	return e
 }
 
+func (r *Result) Cast(out interface{}, method string) error {
+	if method == "" {
+		method = "json"
+	}
+
+	if r.Data == nil {
+		return errors.New("Data is nil")
+	}
+
+	if method == "json" {
+		bs := Jsonify(r.Data)
+		e := Unjson(bs, out)
+		if e != nil {
+			return errors.New("Can not decode data. " + e.Error())
+		}
+		return nil
+	}
+
+	return errors.New("Unable to cast due to unknown cast method")
+}
+
 func (a *Result) Run(f func(data interface{}) (interface{}, error), parm interface{}) *Result {
 	t0 := time.Now()
 	a.Status = Status_OK
