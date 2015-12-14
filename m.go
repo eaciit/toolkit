@@ -43,6 +43,9 @@ func ToM(v interface{}) (M, error) {
 
 func (m M) ToBytes(encodertype string, encodeFn interface{}) []byte {
 	encodertype = strings.ToLower(encodertype)
+	if encodertype == "" {
+		encodertype = "json"
+	}
 	if encodertype == "json" {
 		bs, e := json.Marshal(m)
 		if e != nil {

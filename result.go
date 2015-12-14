@@ -25,14 +25,16 @@ func NewResult() *Result {
 	return r
 }
 
-func (r *Result) SetError(e error) {
+func (r *Result) SetError(e error) *Result {
 	r.Status = Status_NOK
 	r.Message = e.Error()
+	return r
 }
 
-func (r *Result) SetErrorTxt(e string) {
+func (r *Result) SetErrorTxt(e string) *Result {
 	r.Status = Status_NOK
 	r.Message = e
+	return r
 }
 
 func (r *Result) Error() error {
