@@ -2,6 +2,7 @@ package toolkit
 
 import (
 	"reflect"
+	"strconv"
 )
 
 func IsValid(o interface{}) bool {
@@ -14,6 +15,11 @@ func IsValid(o interface{}) bool {
 		return false
 	}
 	return true
+}
+
+func StringToFloat(s string) (float64, bool) {
+	f, e := strconv.ParseFloat(s, 64)
+	return f, e == nil
 }
 
 func IfEq(has interface{}, want interface{}, a interface{}, b interface{}) interface{} {
