@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	httpurl "net/url"
 	"strings"
 )
 
@@ -23,7 +24,23 @@ func HttpCall(url string, callType string,
 
 	var req *http.Request
 
-	//-- GET
+	//fmt.Println(callType)
+	//return nil, fmt.Errorf("ERROR: "+callType+" %v", config.Has("formvalues"))
+	/*
+		if callType == "POST" && config.Has("formvalues") {
+			fmt.Println("Parsing values")
+			fvs := config["formvalues"].(M)
+			vs := httpurl.Values{}
+			for k, v := range fvs {
+				fmt.Printf("Add formvalue %s = %v \n", k, v)
+				//q += k + "="
+				//q += v.(string)
+				vs.Set(k, v.(string))
+			}
+			//rdr := bytes.NewBuffer([]byte(q))
+			//req, err = http.NewRequest(callType, url, rdr)
+			return http.PostForm(url, vs)
+		} else */
 	if datas == nil || len(datas) == 0 {
 		req, err = http.NewRequest(callType, url, nil)
 	} else {
@@ -74,7 +91,20 @@ func httpcall(req *http.Request, config M) (*http.Response, error) {
 
 	var resp *http.Response
 	var errCall error
-	resp, errCall = client.Do(req)
+
+	if config.Has("formvalues") {
+		fvs := config["formvalues"].(M)
+		vs := httpurl.Values{}
+		for k, v := range fvs {
+			fmt.Printf("Add formvalue %s = %v \n", k, v)
+			//q += k + "="
+			//q += v.(string)
+			vs.Set(k, v.(string))
+		}
+		resp, errCall = client.PostForm(req.URL.String(), vs)
+	} else {
+		resp, errCall = client.Do(req)
+	}
 	if errCall == nil {
 		if expectedStatus := config.Get("expectedstatus", 0).(int); expectedStatus != 0 && resp.StatusCode != expectedStatus {
 			return nil, fmt.Errorf("Code error: " + resp.Status)
