@@ -21,6 +21,7 @@ func HttpCall(url string, callType string,
 	if config == nil {
 		config = M{}
 	}
+	config.Set("calltype", callType)
 
 	var req *http.Request
 
