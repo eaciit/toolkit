@@ -18,12 +18,36 @@ type Result struct {
 	Message  string
 	Duration time.Duration
 	Data     interface{}
+
+	EncoderID string
 }
 
 func NewResult() *Result {
 	r := new(Result)
 	r.Status = Status_OK
 	return r
+}
+
+func (r *Result) IsEncoded() bool {
+	//fmt.Printf("Encoder ID: %s \n", r.EncoderID)
+	return r.EncoderID != ""
+}
+
+func (r *Result) SetBytes(data interface{}, EncoderID string) *Result {
+	if EncoderID == "" {
+		EncoderID = "json"
+	}
+	r.EncoderID = EncoderID
+	r.Data = ToBytes(data, r.EncoderID)
+	//fmt.Println("Encoder ID now is " + r.EncoderID)
+	return r
+}
+
+func (r *Result) GetFromBytes(out interface{}) error {
+	if r.IsEncoded() == false {
+		return errors.New("Data is not encoded")
+	}
+	return FromBytes(r.Data.([]byte), r.EncoderID, out)
 }
 
 func (r *Result) SetError(e error) *Result {

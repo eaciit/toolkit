@@ -1,8 +1,8 @@
 package toolkit
 
 import (
-	"bytes"
-	"encoding/gob"
+	//"bytes"
+	//"encoding/gob"
 	"encoding/json"
 	"net"
 	"os"
@@ -250,31 +250,6 @@ func PathDefault(removeSlash bool) string {
 		dir = dir + "/"
 	}
 	return dir
-}
-
-func DecodeByte(bytesData []byte, result interface{}) error {
-	buf := bytes.NewBuffer(bytesData)
-	dec := gob.NewDecoder(buf)
-	e := dec.Decode(result)
-	return e
-}
-
-func GetEncodeByte(obj interface{}) []byte {
-	b, e := EncodeByte(obj)
-	if e != nil {
-		return new(bytes.Buffer).Bytes()
-	}
-	return b
-}
-
-func EncodeByte(obj interface{}) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	gw := gob.NewEncoder(buf)
-	err := gw.Encode(obj)
-	if err != nil {
-		return buf.Bytes(), err
-	}
-	return buf.Bytes(), nil
 }
 
 func GetIP() ([]string, error) {
