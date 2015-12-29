@@ -70,7 +70,7 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 
 	if l.LogToFile {
 		filename := l.FileNamePattern
-		if l.UseDateFormat != "" {
+		if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "%d") {
 			filename = fmt.Sprintf(l.FileNamePattern, time.Now().Format(l.UseDateFormat))
 		}
 		filename = filepath.Join(l.Path, filename)
