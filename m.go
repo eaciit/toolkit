@@ -3,6 +3,7 @@ package toolkit
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type M map[string]interface{}
@@ -32,12 +33,30 @@ func ToM(v interface{}) (M, error) {
 	}
 
 	m := M{}
-	e = json.Unmarshal(bs, m)
+	e = json.Unmarshal(bs, &m)
 	if e != nil {
 		return m, fmt.Errorf("Unable to uncast to M from bytes: " + e.Error())
 	}
 
 	return m, nil
+}
+
+func (m M) ToBytes(encodertype string, others ...interface{}) []byte {
+	encodertype = strings.ToLower(encodertype)
+	if encodertype == "" {
+		encodertype = "json"
+	}
+	/*
+		if encodertype == "json" {
+			bs, e := json.Marshal(m)
+			if e != nil {
+				return []byte{}
+			}
+			return bs
+		}
+	*/
+	return ToBytes(m, encodertype)
+	//return []byte{}
 }
 
 func (m *M) Cast(k string, d interface{}) error {
@@ -51,6 +70,11 @@ func (m *M) Cast(k string, d interface{}) error {
 	}
 	e = json.Unmarshal(b, d)
 	return e
+}
+
+func (m M) GetString(k string) string {
+	s := m.Get(k, "")
+	return s.(string)
 }
 
 func (m M) GetInt(k string) int {
