@@ -77,6 +77,13 @@ func httpcall(req *http.Request, config M) (*http.Response, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Unable to initialize cookie jar: %s", err.Error())
 		}
+
+		tjar := config.Get("cookie", nil).(*cookiejar.Jar)
+
+		if tjar != nil {
+			jar = tjar
+		}
+
 		client = &http.Client{
 			Jar: jar,
 		}
@@ -97,7 +104,7 @@ func httpcall(req *http.Request, config M) (*http.Response, error) {
 		fvs := config["formvalues"].(M)
 		vs := httpurl.Values{}
 		for k, v := range fvs {
-			fmt.Printf("Add formvalue %s = %v \n", k, v)
+			// fmt.Printf("Add formvalue %s = %v \n", k, v)
 			//q += k + "="
 			//q += v.(string)
 			vs.Set(k, v.(string))
@@ -130,4 +137,38 @@ func HttpContentM(r *http.Response) M {
 func HttpContentString(r *http.Response) string {
 	bytes := HttpContent(r)
 	return string(bytes)
+}
+
+func HttpGetCookieJar(url string, callType string,
+	config M) (*cookiejar.Jar, error) {
+
+	var resp *http.Response
+	var errCall error
+	var client *http.Client
+
+	jar, e := cookiejar.New(nil)
+	if e != nil {
+		return nil, fmt.Errorf("Unable to initialize cookie jar: %s", e.Error())
+	}
+
+	client = &http.Client{
+		Jar: jar,
+	}
+
+	if callType == "POST" {
+		if config.Has("loginvalues") {
+			fvs := config["loginvalues"].(M)
+			vs := httpurl.Values{}
+			for k, v := range fvs {
+				vs.Set(k, v.(string))
+			}
+
+			resp, errCall = client.PostForm(url, vs)
+			resp.Body.Close()
+		}
+	} else {
+		_, errCall = client.Get(url)
+	}
+
+	return jar, errCall
 }
