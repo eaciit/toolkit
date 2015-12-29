@@ -41,19 +41,22 @@ func ToM(v interface{}) (M, error) {
 	return m, nil
 }
 
-func (m M) ToBytes(encodertype string, encodeFn interface{}) []byte {
+func (m M) ToBytes(encodertype string, others ...interface{}) []byte {
 	encodertype = strings.ToLower(encodertype)
 	if encodertype == "" {
 		encodertype = "json"
 	}
-	if encodertype == "json" {
-		bs, e := json.Marshal(m)
-		if e != nil {
-			return []byte{}
+	/*
+		if encodertype == "json" {
+			bs, e := json.Marshal(m)
+			if e != nil {
+				return []byte{}
+			}
+			return bs
 		}
-		return bs
-	}
-	return []byte{}
+	*/
+	return ToBytes(m, encodertype)
+	//return []byte{}
 }
 
 func (m *M) Cast(k string, d interface{}) error {
