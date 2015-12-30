@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"io"
 	"errors"
+	"github.com/eaciit/cast"
 	"log"
 	"os"
 	"path/filepath"
@@ -70,8 +71,8 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 
 	if l.LogToFile {
 		filename := l.FileNamePattern
-		if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "%d") {
-			filename = fmt.Sprintf(l.FileNamePattern, time.Now().Format(l.UseDateFormat))
+		if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "%s") {
+			filename = fmt.Sprintf(l.FileNamePattern, cast.Date2String(time.Now(), l.UseDateFormat))
 		}
 		filename = filepath.Join(l.Path, filename)
 		f, e := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
