@@ -1,5 +1,9 @@
 package toolkit
 
+import (
+	"fmt"
+)
+
 var _randChars string
 
 /*
@@ -22,4 +26,16 @@ func SetRandChars(chars string) string {
 
 func RandomString(length int) string {
 	return GenerateRandomString("", length)
+}
+
+func Sprintf(pattern string, parms ...interface{}) string {
+	return fmt.Sprintf(pattern, parms)
+}
+
+func Printf(pattern string, parms ...interface{}) {
+	fmt.Printf(pattern, parms)
+}
+
+func Println(s string) {
+	fmt.Println(s)
 }
