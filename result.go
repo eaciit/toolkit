@@ -33,6 +33,11 @@ func (r *Result) IsEncoded() bool {
 	return r.EncoderID != ""
 }
 
+func (r *Result) SetData(o interface{}) *Result {
+	r.Data = o
+	return r
+}
+
 func (r *Result) SetBytes(data interface{}, EncoderID string) *Result {
 	if EncoderID == "" {
 		EncoderID = "json"
