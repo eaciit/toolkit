@@ -164,7 +164,9 @@ func HttpGetCookieJar(url string, callType string,
 			}
 
 			resp, errCall = client.PostForm(url, vs)
-			resp.Body.Close()
+			if errCall == nil {
+				resp.Body.Close()
+			}
 		}
 	} else {
 		_, errCall = client.Get(url)
