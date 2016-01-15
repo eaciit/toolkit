@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	//"strconv"
-	"fmt"
+	//"fmt"
 	. "strconv"
 	"strings"
 	"time"
@@ -101,55 +101,6 @@ func MakeDate(layout string, value string) time.Time {
 func AddTime(dt0 time.Time, dt1 time.Time) time.Time {
 	dtx := dt0
 	return dtx.Add(dt1.Sub(MakeDate("03:04", "00:00")))
-}
-
-func Id(i interface{}) interface{} {
-	//_ = "breakpoint"
-	idFields := []interface{}{"_id", "ID", "Id", "id"}
-	rv := reflect.ValueOf(i)
-
-	//-- get key
-	found := false
-	var id interface{}
-	if rv.Kind() == reflect.Map {
-		mapkeys := rv.MapKeys()
-		for _, mapkey := range mapkeys {
-			idkey := mapkey.String()
-			if HasMember(idFields, idkey) {
-				idValue := rv.MapIndex(mapkey)
-				if idValue.IsValid() {
-					found = true
-					id = idValue.Interface()
-				}
-			}
-		}
-	} else if rv.Kind() == reflect.Struct {
-		for _, idkey := range idFields {
-			idValue := rv.FieldByName(idkey.(string))
-			if idValue.IsValid() {
-				found = true
-				id = idValue.Interface()
-			}
-		}
-	} else if rv.Kind() == reflect.Ptr {
-		elem := rv.Elem()
-		for _, idkey := range idFields {
-			idValue := elem.FieldByName(idkey.(string))
-			if idValue.IsValid() {
-				found = true
-				id = idValue.Interface()
-			}
-		}
-	} else {
-		//_ = "breakpoint"
-		fmt.Printf("Kind: %s \n", rv.Kind().String())
-	}
-
-	if found {
-		return id
-	} else {
-		return nil
-	}
 }
 
 func Value(i interface{}, fieldName string, def interface{}) interface{} {

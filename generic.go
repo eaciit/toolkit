@@ -8,20 +8,39 @@ import (
 
 func TypeName(o interface{}) string {
 	v := reflect.ValueOf(o)
-	if !v.IsValid() {
-		return ""
-	}
-	if v.Kind() == reflect.Ptr {
-		v = reflect.Indirect(v)
-	}
-	t := v.Type()
-	name := t.Name()
-	pkg := t.PkgPath()
-	if pkg != "" {
-		return pkg + "." + name
-	} else {
-		return name
-	}
+	return v.Type().String()
+	/*
+		v := reflect.ValueOf(o)
+		if !v.IsValid() {
+			return ""
+		}
+
+		var t reflect.Type
+		if v.Kind() == reflect.Ptr {
+			v = reflect.Indirect(v)
+			if v.Kind() == reflect.Ptr {
+				return "*" + TypeName(v.Elem().Interface())
+			} else {
+				t = v.Type()
+			}
+		} else {
+			t = reflect.TypeOf(o)
+		}
+
+		//t := v.Type()
+		name := t.Name()
+		pkg := t.PkgPath()
+		if pkg != "" {
+			return pkg + "." + name
+		} else {
+			return name
+		}
+	*/
+}
+
+func IsNilOrEmpty(x interface{}) bool {
+	rv := reflect.Indirect(reflect.ValueOf(x))
+	return !rv.IsValid() || x == reflect.Zero(reflect.TypeOf(x)).Interface()
 }
 
 func IsPointer(o interface{}) bool {
@@ -37,10 +56,11 @@ func IsSlice(o interface{}) bool {
 func GetEmptySliceElement(o interface{}) (interface{}, error) {
 	rv := reflect.Indirect(reflect.ValueOf(o))
 	if rv.Kind() != reflect.Slice {
-		return nil, errors.New("GetEmptySliceElement: " + rv.Kind().String() + " is not a slice")
+		return nil, errors.New("GetEmptySliceElement: " + TypeName(o) + " is not a slice")
 	}
 	sliceType := rv.Type().Elem()
 	newelem := reflect.New(sliceType)
+	//fmt.Println(sliceType.String())
 	if string(sliceType.String()[0]) == "*" {
 		return newelem.Interface(), nil
 	} else {
