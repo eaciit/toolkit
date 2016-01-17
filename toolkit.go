@@ -55,10 +55,6 @@ func ToFloat32(i interface{}) float32 {
 	}
 }
 
-func (m M) GetFloat64(k string) float64 {
-	i := m.Get(k, 0)
-	return ToFloat64(i)
-}
 func ToFloat64(i interface{}) float64 {
 	switch i.(type) {
 	case string:
@@ -76,16 +72,6 @@ func ToFloat64(i interface{}) float64 {
 	default:
 		return 0
 	}
-}
-
-func HasMember(g []interface{}, find interface{}) bool {
-	found := false
-	for _, v := range g {
-		if v == find {
-			return true
-		}
-	}
-	return found
 }
 
 func MakeDate(layout string, value string) time.Time {
@@ -146,7 +132,13 @@ func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	if !ref.IsValid() {
 		return ref, false
 	}
-	es := ref.Elem()
+
+	var es reflect.Value
+	if ref.Kind() == reflect.Ptr {
+		es = ref.Elem()
+	} else {
+		es = ref
+	}
 	fi := es.FieldByName(fieldName)
 	if fi.IsValid() {
 		return fi, true
@@ -176,22 +168,6 @@ func UnjsonFromString(s string, result interface{}) error {
 	b := []byte(s)
 	e := json.Unmarshal(b, result)
 	return e
-}
-
-func VariadicToSlice(objs ...interface{}) *[]interface{} {
-	result := []interface{}{}
-	for _, v := range objs {
-		result = append(result, v)
-	}
-	return &result
-}
-
-func MapToSlice(objects map[string]interface{}) []interface{} {
-	results := make([]interface{}, 0)
-	for _, v := range objects {
-		results = append(results, v)
-	}
-	return results
 }
 
 func PathDefault(removeSlash bool) string {

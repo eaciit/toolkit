@@ -106,3 +106,17 @@ func SliceItem(o interface{}, index int) interface{} {
 	}
 	return v.Index(index)
 }
+
+func Serde(o interface{}, dest interface{}, serdeType string) error {
+	bs, e := ToBytesWithError(o, serdeType)
+	if len(bs) == 0 {
+		return errors.New("toolkit.Serde: Serialization Fail " + e.Error())
+	}
+
+	e = FromBytes(bs, serdeType, dest)
+	if e != nil {
+		return errors.New("toolkit.Serde: Deserialization fail " + e.Error())
+	}
+
+	return nil
+}
