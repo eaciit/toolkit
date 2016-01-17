@@ -101,7 +101,7 @@ func (m M) Has(k string) bool {
 	return has
 }
 
-func (m M) Update(from, to *M,
+func (m M) Copy(from, to *M,
 	copyFieldIfNotExist bool,
 	exceptFields []string) {
 	var exceptFieldsIface []interface{}
