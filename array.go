@@ -21,9 +21,15 @@ func MapToSlice(objects map[string]interface{}) []interface{} {
 	return results
 }
 
-func HasMember(g []interface{}, find interface{}) bool {
+func HasMember(g interface{}, find interface{}) bool {
 	found := false
-	for _, v := range g {
+	if IsSlice(g) == false {
+		return false
+	}
+
+	count := SliceLen(g)
+	for i := 0; i < count; i++ {
+		v := SliceItem(g, i)
 		if v == find {
 			return true
 		}

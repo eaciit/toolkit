@@ -15,6 +15,11 @@ import (
 	"time"
 )
 
+func init() {
+	//Printf("Registering M")
+	RegisterGobObject(&M{})
+}
+
 func ToInt(i interface{}) int {
 	switch i.(type) {
 	case string:
