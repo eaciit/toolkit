@@ -101,9 +101,10 @@ func (m M) Has(k string) bool {
 	return has
 }
 
-func (m M) Copy(from, to *M,
+func CopyM(from, to *M,
 	copyFieldIfNotExist bool,
 	exceptFields []string) {
+	//Printf("Copy from: %s to %s\n", JsonString(from), JsonString(to))
 	var exceptFieldsIface []interface{}
 	Serde(exceptFields, &exceptFieldsIface, "")
 	fromm := *from

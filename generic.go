@@ -104,7 +104,7 @@ func SliceItem(o interface{}, index int) interface{} {
 	if v.Len()-1 < index {
 		return nil
 	}
-	return v.Index(index)
+	return v.Index(index).Interface()
 }
 
 func Serde(o interface{}, dest interface{}, serdeType string) error {

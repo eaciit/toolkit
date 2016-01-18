@@ -30,3 +30,18 @@ func HasMember(g []interface{}, find interface{}) bool {
 	}
 	return found
 }
+
+func ToInterfaceArray(o interface{}) []interface{} {
+	if IsSlice(o) == false {
+		return []interface{}{}
+	}
+
+	//Printf("Slice Data: %s\n", JsonString(o))
+	var ret []interface{}
+	for i := 0; i < SliceLen(o); i++ {
+		sliceItem := SliceItem(o, i)
+		//Printf("%d Item: %s\n", i, JsonString(sliceItem))
+		ret = append(ret, sliceItem)
+	}
+	return ret
+}
