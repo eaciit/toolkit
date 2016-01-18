@@ -72,6 +72,11 @@ func (m *M) Cast(k string, d interface{}) error {
 	return e
 }
 
+func (m M) GetFloat64(k string) float64 {
+	i := m.Get(k, 0)
+	return ToFloat64(i)
+}
+
 func (m M) GetString(k string) string {
 	s := m.Get(k, "")
 	return s.(string)
@@ -94,4 +99,23 @@ func (m M) GetFloat32(k string) float32 {
 func (m M) Has(k string) bool {
 	_, has := m[k]
 	return has
+}
+
+func (m M) Copy(from, to *M,
+	copyFieldIfNotExist bool,
+	exceptFields []string) {
+	var exceptFieldsIface []interface{}
+	Serde(exceptFields, &exceptFieldsIface, "")
+	fromm := *from
+	tom := *to
+	for f, fv := range fromm {
+		if !HasMember(exceptFieldsIface, f) {
+			if tom.Has(f) {
+				tom.Set(f, fv)
+			} else if copyFieldIfNotExist {
+				tom.Set(f, fv)
+			}
+		}
+	}
+	*to = tom
 }
