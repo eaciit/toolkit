@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	//"strconv"
-	"fmt"
+	//"fmt"
 	. "strconv"
 	"strings"
 	"time"
@@ -55,10 +55,6 @@ func ToFloat32(i interface{}) float32 {
 	}
 }
 
-func (m M) GetFloat64(k string) float64 {
-	i := m.Get(k, 0)
-	return ToFloat64(i)
-}
 func ToFloat64(i interface{}) float64 {
 	switch i.(type) {
 	case string:
@@ -78,16 +74,6 @@ func ToFloat64(i interface{}) float64 {
 	}
 }
 
-func HasMember(g []interface{}, find interface{}) bool {
-	found := false
-	for _, v := range g {
-		if v == find {
-			return true
-		}
-	}
-	return found
-}
-
 func MakeDate(layout string, value string) time.Time {
 	t, e := time.Parse(layout, value)
 	if e != nil {
@@ -101,55 +87,6 @@ func MakeDate(layout string, value string) time.Time {
 func AddTime(dt0 time.Time, dt1 time.Time) time.Time {
 	dtx := dt0
 	return dtx.Add(dt1.Sub(MakeDate("03:04", "00:00")))
-}
-
-func Id(i interface{}) interface{} {
-	//_ = "breakpoint"
-	idFields := []interface{}{"_id", "ID", "Id", "id"}
-	rv := reflect.ValueOf(i)
-
-	//-- get key
-	found := false
-	var id interface{}
-	if rv.Kind() == reflect.Map {
-		mapkeys := rv.MapKeys()
-		for _, mapkey := range mapkeys {
-			idkey := mapkey.String()
-			if HasMember(idFields, idkey) {
-				idValue := rv.MapIndex(mapkey)
-				if idValue.IsValid() {
-					found = true
-					id = idValue.Interface()
-				}
-			}
-		}
-	} else if rv.Kind() == reflect.Struct {
-		for _, idkey := range idFields {
-			idValue := rv.FieldByName(idkey.(string))
-			if idValue.IsValid() {
-				found = true
-				id = idValue.Interface()
-			}
-		}
-	} else if rv.Kind() == reflect.Ptr {
-		elem := rv.Elem()
-		for _, idkey := range idFields {
-			idValue := elem.FieldByName(idkey.(string))
-			if idValue.IsValid() {
-				found = true
-				id = idValue.Interface()
-			}
-		}
-	} else {
-		//_ = "breakpoint"
-		fmt.Printf("Kind: %s \n", rv.Kind().String())
-	}
-
-	if found {
-		return id
-	} else {
-		return nil
-	}
 }
 
 func Value(i interface{}, fieldName string, def interface{}) interface{} {
@@ -195,7 +132,13 @@ func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	if !ref.IsValid() {
 		return ref, false
 	}
-	es := ref.Elem()
+
+	var es reflect.Value
+	if ref.Kind() == reflect.Ptr {
+		es = ref.Elem()
+	} else {
+		es = ref
+	}
 	fi := es.FieldByName(fieldName)
 	if fi.IsValid() {
 		return fi, true
@@ -225,22 +168,6 @@ func UnjsonFromString(s string, result interface{}) error {
 	b := []byte(s)
 	e := json.Unmarshal(b, result)
 	return e
-}
-
-func VariadicToSlice(objs ...interface{}) *[]interface{} {
-	result := []interface{}{}
-	for _, v := range objs {
-		result = append(result, v)
-	}
-	return &result
-}
-
-func MapToSlice(objects map[string]interface{}) []interface{} {
-	results := make([]interface{}, 0)
-	for _, v := range objects {
-		results = append(results, v)
-	}
-	return results
 }
 
 func PathDefault(removeSlash bool) string {

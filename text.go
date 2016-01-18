@@ -1,7 +1,12 @@
 package toolkit
 
+import (
+	"fmt"
+)
+
 var _randChars string
 
+/*
 func randChars() string {
 	if len(_randChars) == 0 {
 		alphabets := "abcdefghijklmnopqrstuvwxyz"
@@ -17,14 +22,20 @@ func SetRandChars(chars string) string {
 	_randChars = chars
 	return _randChars
 }
+*/
 
 func RandomString(length int) string {
-	chars := randChars()
-	l := len(chars)
-	ret := ""
-	for i := 0; i < length; i++ {
-		n := RandInt(l)
-		ret += string(chars[n])
-	}
-	return ret
+	return GenerateRandomString("", length)
+}
+
+func Sprintf(pattern string, parms ...interface{}) string {
+	return fmt.Sprintf(pattern, parms...)
+}
+
+func Printf(pattern string, parms ...interface{}) {
+	fmt.Printf(pattern, parms...)
+}
+
+func Println(s string) {
+	fmt.Println(s)
 }

@@ -3,33 +3,43 @@ package toolkit
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"strings"
 )
 
-func ToBytes(data interface{}, encoderId string) []byte {
+func ToBytesWithError(data interface{}, encoderId string) ([]byte, error) {
 	encoderId = strings.ToLower(encoderId)
 	if encoderId == "" {
-		encoderId = "json"
+		encoderId = "gob"
 	}
 
 	if encoderId == "json" {
-		return Jsonify(data)
+		return Jsonify(data), nil
 	} else if encoderId == "gob" {
 		b, e := EncodeByte(data)
 		if e != nil {
-			return []byte{}
+			return nil, errors.New(e.Error())
 		} else {
-			return b
+			return b, nil
 		}
 	}
-	return []byte{}
+	return nil, errors.New("Invalid encoderId method")
+}
+
+func ToBytes(data interface{}, encoderId string) []byte {
+	b, e := ToBytesWithError(data, encoderId)
+	if e != nil {
+		return []byte{}
+	} else {
+		return b
+	}
 }
 
 func FromBytes(b []byte, decoderId string, out interface{}) error {
 	var e error
 	decoderId = strings.ToLower(decoderId)
 	if decoderId == "" {
-		decoderId = "json"
+		decoderId = "gob"
 	}
 
 	if decoderId == "json" {

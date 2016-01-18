@@ -13,7 +13,7 @@ func MD5String(s string) string {
 
 func GenerateRandomString(baseChars string, n int) string {
 	if baseChars == "" {
-		baseChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnpqrstuvwxyz@#$%&*-_="
+		baseChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnpqrstuvwxyz-_"
 	}
 	baseCharsLen := len(baseChars)
 
