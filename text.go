@@ -36,6 +36,6 @@ func Printf(pattern string, parms ...interface{}) {
 	fmt.Printf(pattern, parms...)
 }
 
-func Println(s string) {
+func Println(s ...interface{}) {
 	fmt.Println(s)
 }
