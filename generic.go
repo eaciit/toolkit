@@ -1,10 +1,23 @@
 package toolkit
 
 import (
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"reflect"
 )
+
+var gobs []string
+
+func RegisterGobObject(o interface{}) {
+	name := reflect.ValueOf(o).Type().Name()
+	if HasMember(gobs, name) {
+		return
+	}
+
+	gob.Register(o)
+	gobs = append(gobs, name)
+}
 
 func TypeName(o interface{}) string {
 	v := reflect.ValueOf(o)
@@ -104,7 +117,7 @@ func SliceItem(o interface{}, index int) interface{} {
 	if v.Len()-1 < index {
 		return nil
 	}
-	return v.Index(index)
+	return v.Index(index).Interface()
 }
 
 func Serde(o interface{}, dest interface{}, serdeType string) error {

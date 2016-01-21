@@ -21,12 +21,33 @@ func MapToSlice(objects map[string]interface{}) []interface{} {
 	return results
 }
 
-func HasMember(g []interface{}, find interface{}) bool {
+func HasMember(g interface{}, find interface{}) bool {
 	found := false
-	for _, v := range g {
+	if IsSlice(g) == false {
+		return false
+	}
+
+	count := SliceLen(g)
+	for i := 0; i < count; i++ {
+		v := SliceItem(g, i)
 		if v == find {
 			return true
 		}
 	}
 	return found
+}
+
+func ToInterfaceArray(o interface{}) []interface{} {
+	if IsSlice(o) == false {
+		return []interface{}{}
+	}
+
+	//Printf("Slice Data: %s\n", JsonString(o))
+	var ret []interface{}
+	for i := 0; i < SliceLen(o); i++ {
+		sliceItem := SliceItem(o, i)
+		//Printf("%d Item: %s\n", i, JsonString(sliceItem))
+		ret = append(ret, sliceItem)
+	}
+	return ret
 }
