@@ -57,14 +57,21 @@ func ToInterfaceArray(o interface{}) []interface{} {
 }
 
 func Compare(v1 interface{}, v2 interface{}, op string) bool {
+
 	vv1 := reflect.Indirect(reflect.ValueOf(v1))
 	vv2 := reflect.Indirect(reflect.ValueOf(v2))
-	if vv1.Type().String() != vv2.Type().String() {
-		return false
-	}
+	Println("Compare: ", op, v1, v2, vv1.Type().String(), vv2.Type().String())
+	/*
+		if vv1.Type().String() != vv2.Type().String() {
+			return false
+		}
+	*/
 
 	k := strings.ToLower(vv1.Kind().String())
 	t := strings.ToLower(vv1.Type().String())
+
+	k2 := strings.ToLower(vv2.Kind().String())
+
 	if strings.Contains(k, "int") || strings.Contains(k, "float") {
 		//--- is a number
 		// lets convert all to float64 for simplicity
@@ -72,9 +79,13 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 
 		if strings.Contains(k, "int") {
 			vv1o = float64(vv1.Int())
-			vv2o = float64(vv2.Int())
 		} else {
 			vv1o = vv1.Float()
+		}
+
+		if strings.Contains(k2, "int") {
+			vv2o = float64(vv2.Int())
+		} else {
 			vv2o = vv2.Float()
 		}
 
