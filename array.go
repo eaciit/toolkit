@@ -60,7 +60,7 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 
 	vv1 := reflect.Indirect(reflect.ValueOf(v1))
 	vv2 := reflect.Indirect(reflect.ValueOf(v2))
-	Println("Compare: ", op, v1, v2, vv1.Type().String(), vv2.Type().String())
+	//Println("Compare: ", op, v1, v2, vv1.Type().String(), vv2.Type().String())
 	/*
 		if vv1.Type().String() != vv2.Type().String() {
 			return false
