@@ -10,11 +10,17 @@ import (
 	"reflect"
 	//"strconv"
 	//"fmt"
-	. "strconv"
+	//. "strconv"
 	"strings"
 	"time"
 )
 
+func init() {
+	//Printf("Registering M")
+	RegisterGobObject(&M{})
+}
+
+/*
 func ToInt(i interface{}) int {
 	switch i.(type) {
 	case string:
@@ -73,6 +79,7 @@ func ToFloat64(i interface{}) float64 {
 		return 0
 	}
 }
+*/
 
 func MakeDate(layout string, value string) time.Time {
 	t, e := time.Parse(layout, value)
@@ -89,6 +96,7 @@ func AddTime(dt0 time.Time, dt1 time.Time) time.Time {
 	return dtx.Add(dt1.Sub(MakeDate("03:04", "00:00")))
 }
 
+/*
 func Value(i interface{}, fieldName string, def interface{}) interface{} {
 	rv := reflect.ValueOf(i)
 	var ret interface{}
@@ -126,6 +134,7 @@ func Value(i interface{}, fieldName string, def interface{}) interface{} {
 		return ret
 	}
 }
+*/
 
 func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	ref := reflect.ValueOf(o)
