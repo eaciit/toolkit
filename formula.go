@@ -6,15 +6,15 @@ import (
 
 var signs string = "()^*/+-"
 
-type formulaElement struct {
+type formulaItem struct {
 	a, b   float64
-	fa, fb *formulaElement
+	fa, fb *formulaItem
 	//hasSubFormula bool
 	op string
 }
 
 func Formula(formulaTxt string, in M) (ret float64, e error) {
-	var fm *formulaElement
+	var fm *formulaItem
 	fm, e = parseFormula(formulaTxt)
 	if e != nil {
 		return
@@ -23,11 +23,31 @@ func Formula(formulaTxt string, in M) (ret float64, e error) {
 	return
 }
 
-func parseFormula(formulaTxt string) (*formulaElement, error) {
+func parseFormula(formulaTxt string) (*formulaItem, error) {
+	var parts []string
+	txtLen := len(formulaTxt)
+	tmp := ""
+	inBracket := false
+	for i := 0; i < txtLen; i++ {
+		c := string(formulaTxt[i])
+		if c == "(" && !inBracket {
+			if tmp != "" {
+				parts = append(parts, tmp)
+			}
+			inBracket = true
+			tmp = ""
+		} else if c == ")" && inBracket {
+			parts = append(parts, tmp)
+			inBracket = false
+			tmp = ""
+		} else {
+			tmp += "c"
+		}
+	}
 	return nil, nil
 }
 
-func (f *formulaElement) runFormula(in M) float64 {
+func (f *formulaItem) runFormula(in M) float64 {
 	var a, b float64
 	if f.fa == nil {
 		a = f.a
