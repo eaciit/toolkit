@@ -109,6 +109,33 @@ func SliceLen(o interface{}) int {
 	return v.Len()
 }
 
+func MapKeys(o interface{}) []interface{} {
+	v := reflect.Indirect(reflect.ValueOf(o))
+	if v.Kind() != reflect.Map {
+		return []interface{}{}
+	}
+
+	var ret []interface{}
+	keyvalues := v.MapKeys()
+	for _, kv := range keyvalues {
+		ret = append(ret, kv.Interface())
+	}
+	return ret
+}
+
+func MapLen(o interface{}) int {
+	return len(MapKeys(o))
+}
+
+func MapItem(o interface{}, key interface{}) interface{} {
+	v := reflect.Indirect(reflect.ValueOf(o))
+	if v.Kind() != reflect.Map {
+		return nil
+	}
+	item := v.MapIndex(reflect.ValueOf(key))
+	return item.Interface()
+}
+
 func SliceItem(o interface{}, index int) interface{} {
 	v := reflect.Indirect(reflect.ValueOf(o))
 	if v.Kind() != reflect.Slice {
