@@ -39,3 +39,20 @@ func Printf(pattern string, parms ...interface{}) {
 func Println(s ...interface{}) {
 	fmt.Println(s)
 }
+
+func Split(txt string, splitterChars []string) (splitValues []string,
+	splitters []string) {
+	txtLen := len(txt)
+	tmp := ""
+	for i := 0; i < txtLen; i++ {
+		c := string(txt[i])
+		if !HasMember(splitterChars, c) {
+			tmp += c
+		} else {
+			splitValues = append(splitValues, tmp)
+			splitters = append(splitters, c)
+			tmp = ""
+		}
+	}
+	return
+}

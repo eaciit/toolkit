@@ -2,6 +2,7 @@ package toolkit
 
 import (
 	"math"
+	"strings"
 )
 
 var signs string = "()^*/+-"
@@ -48,8 +49,45 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 		}
 	}
 
-	if len(parts) == 1 {
+	/*
+		= 3+2*5/2-2*6
+		= +2*5/2-2*6+3
+		= +2*5/2+(-2)*6+3
+		= +5-12+3
+		= -4
 
+		= +2+3*6/2+7 = 18
+		= +3*6/2+2+7 = 18
+	*/
+	if len(parts) == 1 {
+		var fs1, fs2 []float64
+		var ss1, ss2 []string
+
+		txt := parts[0]
+		if !(strings.HasPrefix(txt, "-") || strings.HasPrefix(txt, "+")) {
+			txt = "+" + txt
+		}
+		vs, ss := Split(txt, []string{"^", "*", "/", "+", "-"})
+
+		// translate - to +
+		for i, s := range ss {
+			if s == "-" {
+				ss[i] = "+"
+				vs[i+1] = "-" + vs[i+1]
+			}
+		}
+
+		// sort the signs, all operand not + should be placed first
+		for i, s := range ss {
+			f := ToFloat64(vs[i], 4, RoundingAuto)
+			if s != "+" {
+				ss1 = append(ss1, s)
+				fs1 = append(fs1, f)
+			} else {
+				ss2 = append(ss2, s)
+				fs2 = append(fs2, f)
+			}
+		}
 	}
 
 	return nil, nil
