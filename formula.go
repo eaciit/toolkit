@@ -40,10 +40,18 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 			parts = append(parts, tmp)
 			inBracket = false
 			tmp = ""
+		} else if i == txtLen-1 {
+			tmp += c
+			parts = append(parts, tmp)
 		} else {
-			tmp += "c"
+			tmp += c
 		}
 	}
+
+	if len(parts) == 1 {
+
+	}
+
 	return nil, nil
 }
 
