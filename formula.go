@@ -1,11 +1,13 @@
 package toolkit
 
 import (
+	"errors"
 	"math"
 	"strings"
 )
 
 var signs string = "()^*/+-"
+var signList []string = []string{"^", "*", "/", "+", "-"}
 
 type formulaItem struct {
 	a, b   float64
@@ -25,7 +27,11 @@ func Formula(formulaTxt string, in M) (ret float64, e error) {
 }
 
 func parseFormula(formulaTxt string) (*formulaItem, error) {
+
+	//-- building the parts
 	var parts []string
+	var brackets []*formulaItem
+
 	txtLen := len(formulaTxt)
 	tmp := ""
 	inBracket := false
@@ -38,12 +44,40 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 			inBracket = true
 			tmp = ""
 		} else if c == ")" && inBracket {
-			parts = append(parts, tmp)
+			fi, efi := parseFormula(tmp)
+			if efi != nil {
+				return nil, errors.New("parseFormula: " + tmp + "," + efi.Error())
+			}
+			brackets := append(brackets, fi)
+			parts = append(parts, Sprintf("@b_%d", len(brackets)-1))
 			inBracket = false
 			tmp = ""
 		} else if i == txtLen-1 {
 			tmp += c
 			parts = append(parts, tmp)
+		} else {
+			tmp += c
+		}
+	}
+
+	formulaTxt = ""
+	for _, part := range parts {
+		formulaTxt += part
+	}
+	if !(strings.HasPrefix(formulaTxt, "-") || strings.HasPrefix(formulaTxt, "+")) {
+		formulaTxt = "+" + formulaTxt
+	}
+
+	var fsigns []string
+	var fvalues []string
+	txtLen = len(formulaTxt)
+	tmp = ""
+	for i := 0; i < txtLen; i++ {
+		c := string(formulaTxt[txtLen-1-i])
+		if HasMember(signList, c) {
+			fsigns = append([]string{c}, fsigns...)
+			fvalues = append([]string{tmp}, fvalues...)
+			tmp = ""
 		} else {
 			tmp += c
 		}
@@ -59,28 +93,30 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 		= +2+3*6/2+7 = 18
 		= +3*6/2+2+7 = 18
 	*/
-	if len(parts) == 1 {
-		txt := parts[0]
-		if !(strings.HasPrefix(txt, "-") || strings.HasPrefix(txt, "+")) {
-			txt = "+" + txt
-		}
-		vs, ss := Split(txt, []string{"^", "*", "/", "+", "-"})
+	/*
+		if len(parts) == 1 {
+			txt := parts[0]
+			if !(strings.HasPrefix(txt, "-") || strings.HasPrefix(txt, "+")) {
+				txt = "+" + txt
+			}
+			vs, ss := Split(txt, []string{"^", "*", "/", "+", "-"})
 
-		// group by the sign
-		var itemParts []string
-		tmp = ""
-		for i, s := range ss {
-			if tmp != "" {
-				itemParts = append(itemParts, tmp)
+			// group by the sign
+			var itemParts []string
+			tmp = ""
+			for i, s := range ss {
+				if tmp != "" {
+					itemParts = append(itemParts, tmp)
+				}
+				if ss[i] == "+" || ss[i] == "-" {
+					tmp = s
+				} else {
+					tmp += s
+				}
+				tmp += vs[i]
 			}
-			if ss[i] == "+" || ss[i] == "-" {
-				tmp = s
-			} else {
-				tmp += s
-			}
-			tmp += vs[i]
 		}
-	}
+	*/
 
 	return nil, nil
 }
