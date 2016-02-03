@@ -70,6 +70,7 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 
 	var fsigns []string
 	var fvalues []string
+
 	txtLen = len(formulaTxt)
 	tmp = ""
 	for i := 0; i < txtLen; i++ {
@@ -79,7 +80,7 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 			fvalues = append([]string{tmp}, fvalues...)
 			tmp = ""
 		} else {
-			tmp += c
+			tmp = c + tmp
 		}
 	}
 
