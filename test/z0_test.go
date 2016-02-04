@@ -2,6 +2,7 @@ package toolkittest
 
 import (
 	. "github.com/eaciit/toolkit"
+	"math"
 	"os"
 	"testing"
 	"time"
@@ -33,6 +34,23 @@ func TestFormulaComplex(t *testing.T) {
 	yr := float64(2016)
 	xwant := float64(-2.00 + 3*(200.0+300.00)/500.0 + yr)
 	f, e := NewFormula("-2+3*(200+300.00)/500+@yr")
+	if e != nil {
+		t.Fatalf("Error build formula. %s", e.Error())
+	}
+	xgot := f.Run(M{}.Set("@yr", yr))
+	if xgot != xwant {
+		t.Fatalf("Want %.2f got %.2f", xwant, xgot)
+	} else {
+		t.Logf("Want %.2f got %.2f", xwant, xgot)
+	}
+}
+
+func TestFormulaPower(t *testing.T) {
+	//t.Skip()
+	//defer killApp(50)
+	yr := float64(5)
+	xwant := float64(yr + (2.0 * math.Pow(4.0, 3.0) / 2.0))
+	f, e := NewFormula("@yr+(2.0*4^3/2)")
 	if e != nil {
 		t.Fatalf("Error build formula. %s", e.Error())
 	}

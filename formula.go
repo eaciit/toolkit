@@ -2,7 +2,7 @@ package toolkit
 
 import (
 	"errors"
-	//	"math"
+	"math"
 	"strings"
 )
 
@@ -14,6 +14,7 @@ type Formula struct {
 	Value       float64
 	Negate      bool
 	Divide      bool
+	Power       bool
 	SubFormulas []*Formula
 	BaseOp      string
 
@@ -109,10 +110,12 @@ func parseFormulaSub(formulaTxt string, fisubs []*Formula) (*Formula, error) {
 
 		tmp := ""
 		fpartlen := len(fpart)
+		isPower := false
 		for fpartidx := fpartlen - 1; fpartidx >= 0; fpartidx-- {
 			c := string(fpart[fpartidx])
 			if ((c == "*" || c == "/" || c == "^") && ret.BaseOp == "*") ||
 				((c == "+" || c == "-") && ret.BaseOp == "+") || fpartidx == 0 {
+				isPower = c == "^"
 				var subfi *Formula
 				isnegate := false
 				if fpartidx == 0 && c == "-" {
@@ -153,12 +156,15 @@ func parseFormulaSub(formulaTxt string, fisubs []*Formula) (*Formula, error) {
 				if multiVariable {
 					subfi.Divide = c == "/"
 					subfi.Negate = isnegate
+					subfi.Power = isPower
 					ret.SubFormulas = append(ret.SubFormulas, subfi)
 				} else {
 					ret.Divide = c == "/"
+					ret.Power = isPower
 					ret.Negate = isnegate
 					ret.Parm = subfi.Parm
 					ret.Value = subfi.Value
+					ret.BaseOp = subfi.BaseOp
 					ret.SubFormulas = subfi.SubFormulas
 				}
 				tmp = ""
@@ -215,6 +221,8 @@ func (f *Formula) Run(in M) float64 {
 			ret = -ret
 		}
 	} else {
+		isPower := false
+		lastvalue := float64(0)
 		for idx, sf := range f.SubFormulas {
 			v := sf.Run(in)
 			if sf.Divide {
@@ -223,12 +231,23 @@ func (f *Formula) Run(in M) float64 {
 			if f.BaseOp == "+" {
 				ret += v
 			} else {
-				ret = ret * v
+				if isPower {
+					ret *= math.Pow(v, lastvalue)
+					isPower = false
+				} else if !sf.Power {
+					ret = ret * v
+				}
+				isPower = sf.Power
 				//ret = 2016.0 * 0.1
+				//Println(v, " ", ret)
 			}
+			lastvalue = v
 			dbg += Sprintf("%d=%.2f ", idx, v)
 		}
 	}
-	//Printf("Formula: %s Value: %.2f Negate:%v BaseOp:%s Trace:%s\n", f.Txt, ret, f.Negate, f.BaseOp, dbg)
+
+	//fcopy := *f
+	//fcopy.SubFormulas = []*Formula{}
+	//Printf("Formula: %s Value: %.2f f:%s Trace:%s\n\n", f.Txt, ret, JsonString(fcopy), dbg)
 	return ret
 }
