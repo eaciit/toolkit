@@ -15,10 +15,11 @@ func TestFormulaSimple(t *testing.T) {
 	//defer killApp(50)
 	yr := float64(2016)
 	xwant := float64((300.0 + yr) * 2.0)
-	xgot, e := Formula("(300+@yr)*2", M{}.Set("@yr", yr))
+	f, e := NewFormula("(300+@yr)*2")
 	if e != nil {
 		t.Fatalf("Error build formula. %s", e.Error())
 	}
+	xgot := f.Run(M{}.Set("@yr", yr))
 	if xgot != xwant {
 		t.Fatalf("Want %.2f got %.2f", xwant, xgot)
 	} else {
@@ -31,10 +32,11 @@ func TestFormulaComplex(t *testing.T) {
 	//defer killApp(50)
 	yr := float64(2016)
 	xwant := float64(-2.00 + 3*(200.0+300.00)/500.0 + yr)
-	xgot, e := Formula("-2+3*(200+300.00)/500+@yr", M{}.Set("@yr", yr))
+	f, e := NewFormula("-2+3*(200+300.00)/500+@yr")
 	if e != nil {
 		t.Fatalf("Error build formula. %s", e.Error())
 	}
+	xgot := f.Run(M{}.Set("@yr", yr))
 	if xgot != xwant {
 		t.Fatalf("Want %.2f got %.2f", xwant, xgot)
 	} else {

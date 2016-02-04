@@ -9,32 +9,30 @@ import (
 var signs string = "()^*/+-"
 var signList []string = []string{"^", "*", "/", "+", "-"}
 
-type formulaItem struct {
+type Formula struct {
 	Parm        string
 	Value       float64
 	Negate      bool
 	Divide      bool
-	SubFormulas []*formulaItem
+	SubFormulas []*Formula
 	BaseOp      string
 
-	Formula string
+	Txt string
 }
 
-func Formula(formulaTxt string, in M) (ret float64, e error) {
-	var fm *formulaItem
-	fm, e = parseFormula(formulaTxt)
+func NewFormula(formulaTxt string) (*Formula, error) {
+	fm, e := parseFormula(formulaTxt)
 	if e != nil {
-		return
+		return nil, errors.New("NewFormula: " + e.Error())
 	}
-	ret = fm.run(in)
-	return
+	return fm, nil
 }
 
-func parseFormula(txt string) (*formulaItem, error) {
-	return parseFormulaSub(txt, []*formulaItem{})
+func parseFormula(txt string) (*Formula, error) {
+	return parseFormulaSub(txt, []*Formula{})
 }
 
-func parseFormulaSub(formulaTxt string, fisubs []*formulaItem) (*formulaItem, error) {
+func parseFormulaSub(formulaTxt string, fisubs []*Formula) (*Formula, error) {
 
 	//-- building the parts
 	if formulaTxt == "" {
@@ -60,7 +58,7 @@ func parseFormulaSub(formulaTxt string, fisubs []*formulaItem) (*formulaItem, er
 			if efi != nil {
 				return nil, errors.New("parseFormula: " + tmp + "," + efi.Error())
 			} else if fi == nil {
-				return nil, errors.New(Sprintf("parseFormula: %s unable to parse it into *formulaItem", tmp))
+				return nil, errors.New(Sprintf("parseFormula: %s unable to parse it into *Formula", tmp))
 			}
 			fisubs = append(fisubs, fi)
 			parts = append(parts, Sprintf("@b_%d", len(fisubs)-1))
@@ -96,8 +94,8 @@ func parseFormulaSub(formulaTxt string, fisubs []*formulaItem) (*formulaItem, er
 		}
 	}
 
-	ret := new(formulaItem)
-	ret.Formula = originalFormula
+	ret := new(Formula)
+	ret.Txt = originalFormula
 	if len(fparts) == 1 {
 		fpart := fparts[0]
 		multiVariable := false
@@ -115,7 +113,7 @@ func parseFormulaSub(formulaTxt string, fisubs []*formulaItem) (*formulaItem, er
 			c := string(fpart[fpartidx])
 			if ((c == "*" || c == "/" || c == "^") && ret.BaseOp == "*") ||
 				((c == "+" || c == "-") && ret.BaseOp == "+") || fpartidx == 0 {
-				var subfi *formulaItem
+				var subfi *Formula
 				isnegate := false
 				if fpartidx == 0 && c == "-" {
 					tmp = c + tmp
@@ -135,7 +133,7 @@ func parseFormulaSub(formulaTxt string, fisubs []*formulaItem) (*formulaItem, er
 					subfi = fisubs[formulaIndex]
 				} else {
 					//--- not a subfunction already defined
-					subfi = new(formulaItem)
+					subfi = new(Formula)
 					if !strings.Contains(tmp, "@") {
 						//-- it is a value
 						f64 := ToFloat64(tmp, 4, RoundingAuto)
@@ -199,7 +197,7 @@ func isMultiply(fpart string) bool {
 	return false
 }
 
-func (f *formulaItem) run(in M) float64 {
+func (f *Formula) Run(in M) float64 {
 	var ret float64
 	dbg := ""
 	if f.BaseOp == "+" {
@@ -218,7 +216,7 @@ func (f *formulaItem) run(in M) float64 {
 		}
 	} else {
 		for idx, sf := range f.SubFormulas {
-			v := sf.run(in)
+			v := sf.Run(in)
 			if sf.Divide {
 				v = 1.0 / v
 			}
@@ -231,6 +229,6 @@ func (f *formulaItem) run(in M) float64 {
 			dbg += Sprintf("%d=%.2f ", idx, v)
 		}
 	}
-	Printf("Formula: %s Value: %.2f Negate:%v BaseOp:%s Trace:%s\n", f.Formula, ret, f.Negate, f.BaseOp, dbg)
+	Printf("Formula: %s Value: %.2f Negate:%v BaseOp:%s Trace:%s\n", f.Txt, ret, f.Negate, f.BaseOp, dbg)
 	return ret
 }
