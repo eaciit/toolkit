@@ -17,3 +17,19 @@ func PathDefault(removeSlash bool) string {
 	}
 	return dir
 }
+
+func IsFileNotExist(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return true
+	}
+
+	return false
+}
+
+func IsFileExist(path string) bool {
+	if _, err := os.Stat(path); err == nil {
+		return true
+	}
+
+	return false
+}
