@@ -121,7 +121,7 @@ func parseFormulaSub(formulaTxt string, fisubs []*Formula) (*Formula, error) {
 				if strings.HasPrefix(tmp, "-") {
 					isnegate = true
 					tmp = tmp[1:]
-					Println("Negating: ", tmp, " ")
+					//Println("Negating: ", tmp, " ")
 				}
 				if strings.Contains(tmp, "@b_") {
 					//--- it is a subfunction that already defined
@@ -229,6 +229,6 @@ func (f *Formula) Run(in M) float64 {
 			dbg += Sprintf("%d=%.2f ", idx, v)
 		}
 	}
-	Printf("Formula: %s Value: %.2f Negate:%v BaseOp:%s Trace:%s\n", f.Txt, ret, f.Negate, f.BaseOp, dbg)
+	//Printf("Formula: %s Value: %.2f Negate:%v BaseOp:%s Trace:%s\n", f.Txt, ret, f.Negate, f.BaseOp, dbg)
 	return ret
 }
