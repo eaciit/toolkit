@@ -166,6 +166,27 @@ func JsonString(o interface{}) string {
 	return string(bs)
 }
 
+var _indentChar string
+
+func SetIndentChar(c string) {
+	_indentChar = c
+}
+
+func IndentChar() string {
+	if _indentChar == "" {
+		_indentChar = " "
+	}
+	return _indentChar
+}
+
+func JsonStringIndent(o interface{}, indentChar string) string {
+	bs, e := json.MarshalIndent(o, "", IndentChar())
+	if e != nil {
+		return "{}"
+	}
+	return string(bs)
+}
+
 func Unjson(b []byte, result interface{}) error {
 	e := json.Unmarshal(b, result)
 	return e

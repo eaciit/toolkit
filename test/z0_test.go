@@ -2,9 +2,29 @@ package toolkittest
 
 import (
 	. "github.com/eaciit/toolkit"
+	"os"
 	"testing"
 	"time"
 )
+
+func killApp(code int) {
+	defer os.Exit(code)
+}
+
+func TestFormula(t *testing.T) {
+	//defer killApp(50)
+	yr := float64(2016)
+	xwant := float64(-2.00 + 40.0*(200.0+1350.65)/500.0 + yr)
+	xgot, e := Formula("-2+40*(200+1350.65)/500+@yr", M{}.Set("@yr", yr))
+	if e != nil {
+		t.Fatalf("Error build formula. %s", e.Error())
+	}
+	if xgot != xwant {
+		t.Fatalf("Want %.2f got %.2f", xwant, xgot)
+	} else {
+		t.Logf("Want %.2f got %.2f", xwant, xgot)
+	}
+}
 
 func TestID(t *testing.T) {
 	type Data struct {

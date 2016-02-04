@@ -2,7 +2,7 @@ package toolkit
 
 import (
 	"errors"
-	"math"
+	//	"math"
 	"strings"
 )
 
@@ -10,10 +10,14 @@ var signs string = "()^*/+-"
 var signList []string = []string{"^", "*", "/", "+", "-"}
 
 type formulaItem struct {
-	a, b   float64
-	fa, fb *formulaItem
-	//hasSubFormula bool
-	op string
+	Parm        string
+	Value       float64
+	Negate      bool
+	Divide      bool
+	SubFormulas []*formulaItem
+	BaseOp      string
+
+	Formula string
 }
 
 func Formula(formulaTxt string, in M) (ret float64, e error) {
@@ -22,15 +26,19 @@ func Formula(formulaTxt string, in M) (ret float64, e error) {
 	if e != nil {
 		return
 	}
-	ret = fm.runFormula(in)
+	ret = fm.run(in)
 	return
 }
 
-func parseFormula(formulaTxt string) (*formulaItem, error) {
+func parseFormula(txt string) (*formulaItem, error) {
+	return parseFormulaSub(txt, []*formulaItem{})
+}
+
+func parseFormulaSub(formulaTxt string, fisubs []*formulaItem) (*formulaItem, error) {
 
 	//-- building the parts
 	var parts []string
-	var brackets []*formulaItem
+	originalFormula := formulaTxt
 
 	txtLen := len(formulaTxt)
 	tmp := ""
@@ -44,12 +52,14 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 			inBracket = true
 			tmp = ""
 		} else if c == ")" && inBracket {
-			fi, efi := parseFormula(tmp)
+			fi, efi := parseFormulaSub(tmp, fisubs)
 			if efi != nil {
 				return nil, errors.New("parseFormula: " + tmp + "," + efi.Error())
+			} else if fi == nil {
+				return nil, errors.New(Sprintf("parseFormula: %s unable to parse it into *formulaItem", tmp))
 			}
-			brackets := append(brackets, fi)
-			parts = append(parts, Sprintf("@b_%d", len(brackets)-1))
+			fisubs = append(fisubs, fi)
+			parts = append(parts, Sprintf("@b_%d", len(fisubs)-1))
 			inBracket = false
 			tmp = ""
 		} else if i == txtLen-1 {
@@ -67,92 +77,124 @@ func parseFormula(formulaTxt string) (*formulaItem, error) {
 	if !(strings.HasPrefix(formulaTxt, "-") || strings.HasPrefix(formulaTxt, "+")) {
 		formulaTxt = "+" + formulaTxt
 	}
+	//var fsigns []string
+	//var fvalues []string
 
-	var fsigns []string
-	var fvalues []string
-
+	var fparts []string
 	txtLen = len(formulaTxt)
 	tmp = ""
 	for i := 0; i < txtLen; i++ {
 		c := string(formulaTxt[txtLen-1-i])
-		if HasMember(signList, c) {
-			fsigns = append([]string{c}, fsigns...)
-			fvalues = append([]string{tmp}, fvalues...)
+		if HasMember([]string{"+", "-"}, c) {
+			fparts = append(fparts, tmp)
 			tmp = ""
 		} else {
 			tmp = c + tmp
 		}
 	}
 
-	/*
-		= 3+2*5/2-2*6
-		= +2*5/2-2*6+3
-		= +2*5/2+(-2)*6+3
-		= +5-12+3
-		= -4
+	ret := new(formulaItem)
+	ret.Formula = originalFormula
+	if len(fparts) == 1 {
+		fpart := fparts[0]
+		ret.BaseOp = "+"
+		if isMultiply(fpart) {
+			ret.BaseOp = "*"
+		}
 
-		= +2+3*6/2+7 = 18
-		= +3*6/2+2+7 = 18
-	*/
-	/*
-		if len(parts) == 1 {
-			txt := parts[0]
-			if !(strings.HasPrefix(txt, "-") || strings.HasPrefix(txt, "+")) {
-				txt = "+" + txt
-			}
-			vs, ss := Split(txt, []string{"^", "*", "/", "+", "-"})
-
-			// group by the sign
-			var itemParts []string
-			tmp = ""
-			for i, s := range ss {
-				if tmp != "" {
-					itemParts = append(itemParts, tmp)
+		tmp := ""
+		for _, r := range fpart {
+			c := string(r)
+			if ((c == "*" || c == "/" || c == "^") && ret.BaseOp == "*") ||
+				((c == "+" || c == "-") && ret.BaseOp == "+") {
+				var subfi *formulaItem
+				isnegate := false
+				if strings.HasPrefix(tmp, "-") {
+					isnegate = true
+					tmp = tmp[1:]
 				}
-				if ss[i] == "+" || ss[i] == "-" {
-					tmp = s
+				if strings.Contains(tmp, "@b_") {
+					//--- it is a subfunction that already defined
+					formulaIndex := int(-1)
+					formulaIndex = ToInt(tmp[3:], RoundingAuto)
+					if formulaIndex >= len(fisubs) {
+						return nil, errors.New(Sprintf("parseFormula: %s Subformula index-%d is not available", tmp, formulaIndex))
+					}
+					subfi = fisubs[formulaIndex]
 				} else {
-					tmp += s
+					//--- not a subfunction already defined
+					subfi = new(formulaItem)
+					if !strings.Contains(tmp, "@") {
+						//-- it is a value
+						f64 := ToFloat64(tmp, 4, RoundingAuto)
+						if tmp != "0" && f64 == float64(0) {
+							return nil, errors.New("parseFormula: " + fpart + " Can not render to float")
+						}
+						Printf("%s value is %.2f\n", tmp, f64)
+						subfi.Value = f64
+					} else {
+						//-- it is a.Parm
+						subfi.Parm = tmp
+					}
 				}
-				tmp += vs[i]
+				subfi.Divide = c == "/"
+				subfi.Negate = isnegate
+				ret.SubFormulas = append(ret.SubFormulas, subfi)
+				tmp = ""
+			} else {
+				tmp += c
 			}
 		}
-	*/
+	} else {
+		for _, fpart := range fparts {
+			fi, efi := parseFormulaSub(fpart, fisubs)
+			if efi != nil {
+				return nil, errors.New("parseFormula: " + fpart + " " + efi.Error())
+			}
+			if isMultiply(fpart) {
+				ret.BaseOp = "*"
+			} else {
+				ret.BaseOp = "+"
+			}
+			ret.SubFormulas = append(ret.SubFormulas, fi)
+		}
+	}
 
-	return nil, nil
+	Printf("Origin:%s NewFormula:%s Subformula: %d\n%s\nBracketFormula: %d datas\n%s \n",
+		originalFormula, formulaTxt,
+		len(ret.SubFormulas), JsonStringIndent(ret.SubFormulas, ""),
+		len(fisubs), JsonStringIndent(fisubs, ""))
+
+	return ret, nil
 }
 
-func (f *formulaItem) runFormula(in M) float64 {
-	var a, b float64
-	if f.fa == nil {
-		a = f.a
-	} else {
-		a = f.fa.runFormula(in)
+func isMultiply(fpart string) bool {
+	if strings.Contains(fpart, "*") || strings.Contains(fpart, "/") || strings.Contains(fpart, "^") {
+		return true
 	}
-	if f.fb == nil {
-		b = f.b
-	} else {
-		b = f.fb.runFormula(in)
-	}
-	op := f.op
+	return false
+}
 
-	if op == "^" {
-		return math.Pow(a, b)
-	} else if op == "*" {
-		return a * b
-	} else if op == "/" {
-		if b == 0 {
-			return 0
+func (f *formulaItem) run(in M) float64 {
+	ret := float64(0)
+	if len(f.SubFormulas) == 0 {
+		ret = f.Value
+	} else {
+		for _, sf := range f.SubFormulas {
+			v := sf.run(in)
+			if sf.Negate {
+				v = -v
+			}
+			if sf.Divide {
+				v = 1.0 / v
+			}
+			if sf.BaseOp == "+" {
+				ret += v
+			} else {
+				ret = ret * v
+			}
 		}
-		return a / b
-	} else if op == "+" {
-		return a + b
-	} else if op == "-" {
-		return a - b
-	} else if a == 0 {
-		return b
-	} else if b == 0 {
-		return a
 	}
-	return 0
+	Printf("Formula: %s Value: %.2f\n", f.Formula, ret)
+	return ret
 }
