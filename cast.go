@@ -186,9 +186,11 @@ func ToFloat64(o interface{}, decimalPoint int, rounding string) float64 {
 	k := Kind(o)
 	v := Value(o)
 
+	//Println("ToFloat Value: ", k.String())
 	if k == reflect.String {
 		f, e = strconv.ParseFloat(v.String(), 64)
 		if e != nil {
+			//Printf("Unable to convert to float %s\n", v.String())
 			return 0
 		}
 	} else if k == reflect.Int || k == reflect.Int8 ||
