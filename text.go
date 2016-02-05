@@ -37,7 +37,7 @@ func Printf(pattern string, parms ...interface{}) {
 }
 
 func Println(s ...interface{}) {
-	fmt.Println(s)
+	fmt.Println(s...)
 }
 
 func Split(txt string, splitterChars []string) (splitValues []string,

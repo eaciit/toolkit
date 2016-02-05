@@ -3,8 +3,8 @@ package toolkit
 import (
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"reflect"
+	"strings"
 )
 
 var gobs []string
@@ -56,6 +56,15 @@ func IsNilOrEmpty(x interface{}) bool {
 	return !rv.IsValid() || x == reflect.Zero(reflect.TypeOf(x)).Interface()
 }
 
+func IsNumber(o interface{}) bool {
+	v := reflect.Indirect(reflect.ValueOf(o))
+	ts := v.Type().String()
+	if strings.Contains(ts, "int") || strings.Contains(ts, "float") {
+		return true
+	}
+	return false
+}
+
 func IsPointer(o interface{}) bool {
 	v := reflect.ValueOf(o)
 	return v.Kind() == reflect.Ptr
@@ -73,11 +82,11 @@ func GetEmptySliceElement(o interface{}) (interface{}, error) {
 	}
 	sliceType := rv.Type().Elem()
 	newelem := reflect.New(sliceType)
-	//fmt.Println(sliceType.String())
+	//Println(newelem.Type().String())
 	if string(sliceType.String()[0]) == "*" {
-		return newelem.Interface(), nil
+		return Value2Interface(newelem), nil
 	} else {
-		return newelem.Elem().Interface(), nil
+		return Value2Interface(newelem.Elem()), nil
 	}
 }
 
@@ -97,7 +106,7 @@ func AppendSlice(o interface{}, v interface{}) error {
 
 func MakeSlice(o interface{}) interface{} {
 	t := reflect.TypeOf(o)
-	fmt.Printf("Type: %s \n", t.String())
+	//fmt.Printf("Type: %s \n", t.String())
 	return reflect.MakeSlice(reflect.SliceOf(t), 0, 0).Interface()
 }
 
@@ -144,7 +153,7 @@ func SliceItem(o interface{}, index int) interface{} {
 	if v.Len()-1 < index {
 		return nil
 	}
-	return v.Index(index).Interface()
+	return Value2Interface(v.Index(index))
 }
 
 func Serde(o interface{}, dest interface{}, serdeType string) error {
@@ -159,4 +168,19 @@ func Serde(o interface{}, dest interface{}, serdeType string) error {
 	}
 
 	return nil
+}
+
+func Value2Interface(vi reflect.Value) interface{} {
+	vik := vi.Type().String()
+	if strings.Contains(vik, "string") {
+		return vi.String()
+	} else if strings.Contains(vik, "int") {
+		return int(vi.Int())
+	} else if strings.Contains(vik, "float") {
+		return vi.Float()
+	} else if strings.Contains(vik, "bool") {
+		return vi.Bool()
+	} else {
+		return vi.Interface()
+	}
 }
