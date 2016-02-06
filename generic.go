@@ -156,6 +156,16 @@ func SliceItem(o interface{}, index int) interface{} {
 	return Value2Interface(v.Index(index))
 }
 
+func SliceSetItem(o interface{}, i int, d interface{}) error {
+	v := reflect.Indirect(reflect.ValueOf(o))
+	if i >= SliceLen(o) {
+		i = SliceLen(o)
+		v.SetCap(i + 1)
+	}
+	v.Index(i).Set(reflect.ValueOf(d))
+	return nil
+}
+
 func Serde(o interface{}, dest interface{}, serdeType string) error {
 	bs, e := ToBytesWithError(o, serdeType)
 	if len(bs) == 0 {
