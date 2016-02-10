@@ -2,6 +2,7 @@ package toolkit
 
 import (
 	"fmt"
+	"strings"
 )
 
 var _randChars string
@@ -55,4 +56,45 @@ func Split(txt string, splitterChars []string) (splitValues []string,
 		}
 	}
 	return
+}
+
+func SubStr(str string, start int, length int) string {
+    if start < 0 {
+        start = 0
+    }
+	if length == 0 {
+		length = len(str)
+	}
+	strArr := strings.Split(str, "")
+	i      := 0
+	str     = ""
+	for i=start; i<start+length; i++ {
+		if i >= len(strArr) {
+			break
+		}
+		str += strArr[i]
+	}
+	return str
+}
+
+func StrToLower(str string) string {
+	return strings.ToLower(str)
+}
+
+func StrToUpper(str string) string {
+	return strings.ToUpper(str)
+}
+
+func UcFirst(str string) string {
+	first := SubStr(str, 0, 1)
+	last  := SubStr(str, 1, 0)
+	return strings.ToUpper(first)+strings.ToLower(last)
+}
+
+func UcWords(str string) string {
+	strArr := strings.Split(str, " ")
+	for i:=0; i<len(strArr); i++ {
+		strArr[i] = UcFirst(strArr[i])
+	}
+	return strings.Join(strArr, " ")
 }
