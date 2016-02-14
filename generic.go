@@ -118,6 +118,23 @@ func SliceLen(o interface{}) int {
 	return v.Len()
 }
 
+func SliceSubset(o interface{}, lbound, ubound int) interface{} {
+	v := reflect.Indirect(reflect.ValueOf(o))
+	l := v.Len()
+	if lbound < l && ubound < l {
+		var arrays reflect.Value
+		for i := lbound; i <= ubound; i++ {
+			elem := v.Index(i)
+			if i == lbound {
+				arrays = reflect.MakeSlice(elem.Type(), 0, 0)
+			}
+			arrays = reflect.Append(arrays, elem)
+		}
+		return arrays.Interface()
+	}
+	return nil
+}
+
 func MapKeys(o interface{}) []interface{} {
 	v := reflect.Indirect(reflect.ValueOf(o))
 	if v.Kind() != reflect.Map {
@@ -158,11 +175,21 @@ func SliceItem(o interface{}, index int) interface{} {
 
 func SliceSetItem(o interface{}, i int, d interface{}) error {
 	v := reflect.Indirect(reflect.ValueOf(o))
-	if i >= SliceLen(o) {
-		i = SliceLen(o)
-		v.SetCap(i + 1)
+	if v.Kind() != reflect.Slice {
+		err := "SliceSetItem: object returned is not a slice. It is " + v.Kind().String() + " " + v.Type().String()
+		//Println(err)
+		return errors.New(err)
 	}
-	v.Index(i).Set(reflect.ValueOf(d))
+	currentLen := v.Len()
+	if i >= currentLen {
+		//i = currentLen + 1
+		//Println("Set capacity to ", i+1)
+		//v.SetCap(i + 1)
+		v1 := reflect.Append(v, reflect.ValueOf(d))
+		v.Set(v1)
+	} else {
+		v.Index(i).Set(reflect.ValueOf(d))
+	}
 	return nil
 }
 
