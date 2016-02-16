@@ -74,7 +74,7 @@ func (m *M) Cast(k string, d interface{}) error {
 
 func (m M) GetFloat64(k string) float64 {
 	i := m.Get(k, 0)
-	return ToFloat64(i)
+	return ToFloat64(i, 4, RoundingAuto)
 }
 
 func (m M) GetString(k string) string {
@@ -84,7 +84,7 @@ func (m M) GetString(k string) string {
 
 func (m M) GetInt(k string) int {
 	i := m.Get(k, 0)
-	return ToInt(i)
+	return ToInt(i, RoundingAuto)
 }
 
 func (m *M) Unset(k string) {
@@ -93,7 +93,7 @@ func (m *M) Unset(k string) {
 
 func (m M) GetFloat32(k string) float32 {
 	i := m.Get(k, 0)
-	return ToFloat32(i)
+	return ToFloat32(i, 4, RoundingAuto)
 }
 
 func (m M) Has(k string) bool {

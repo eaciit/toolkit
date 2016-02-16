@@ -2,15 +2,28 @@ package toolkit
 
 import (
 	"math/rand"
+	"sync"
 	"time"
 )
 
-var r *rand.Rand
+type randomizer struct {
+	sync.Mutex
+	r *rand.Rand
+}
+
+var r *randomizer
+
+func (r *randomizer) Intn(limit int) int {
+	defer r.Unlock()
+	r.Lock()
+	return r.r.Intn(limit)
+}
 
 func initRandomSource() {
 	if r == nil {
 		src := rand.NewSource(time.Now().UnixNano())
-		r = rand.New(src)
+		r = new(randomizer)
+		r.r = rand.New(src)
 	}
 }
 

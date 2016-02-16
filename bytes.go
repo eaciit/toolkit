@@ -10,7 +10,7 @@ import (
 func ToBytesWithError(data interface{}, encoderId string) ([]byte, error) {
 	encoderId = strings.ToLower(encoderId)
 	if encoderId == "" {
-		encoderId = "gob"
+		encoderId = "json"
 	}
 
 	if encoderId == "json" {
@@ -39,7 +39,7 @@ func FromBytes(b []byte, decoderId string, out interface{}) error {
 	var e error
 	decoderId = strings.ToLower(decoderId)
 	if decoderId == "" {
-		decoderId = "gob"
+		decoderId = "json"
 	}
 
 	if decoderId == "json" {

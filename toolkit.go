@@ -5,12 +5,10 @@ import (
 	//"encoding/gob"
 	"encoding/json"
 	"net"
-	"os"
-	"path/filepath"
 	"reflect"
 	//"strconv"
 	//"fmt"
-	. "strconv"
+	//. "strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +18,7 @@ func init() {
 	RegisterGobObject(&M{})
 }
 
+/*
 func ToInt(i interface{}) int {
 	switch i.(type) {
 	case string:
@@ -78,6 +77,7 @@ func ToFloat64(i interface{}) float64 {
 		return 0
 	}
 }
+*/
 
 func MakeDate(layout string, value string) time.Time {
 	t, e := time.Parse(layout, value)
@@ -94,6 +94,7 @@ func AddTime(dt0 time.Time, dt1 time.Time) time.Time {
 	return dtx.Add(dt1.Sub(MakeDate("03:04", "00:00")))
 }
 
+/*
 func Value(i interface{}, fieldName string, def interface{}) interface{} {
 	rv := reflect.ValueOf(i)
 	var ret interface{}
@@ -131,6 +132,7 @@ func Value(i interface{}, fieldName string, def interface{}) interface{} {
 		return ret
 	}
 }
+*/
 
 func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	ref := reflect.ValueOf(o)
@@ -164,6 +166,27 @@ func JsonString(o interface{}) string {
 	return string(bs)
 }
 
+var _indentChar string
+
+func SetIndentChar(c string) {
+	_indentChar = c
+}
+
+func IndentChar() string {
+	if _indentChar == "" {
+		_indentChar = " "
+	}
+	return _indentChar
+}
+
+func JsonStringIndent(o interface{}, indentChar string) string {
+	bs, e := json.MarshalIndent(o, "", IndentChar())
+	if e != nil {
+		return "{}"
+	}
+	return string(bs)
+}
+
 func Unjson(b []byte, result interface{}) error {
 	e := json.Unmarshal(b, result)
 	return e
@@ -173,15 +196,6 @@ func UnjsonFromString(s string, result interface{}) error {
 	b := []byte(s)
 	e := json.Unmarshal(b, result)
 	return e
-}
-
-func PathDefault(removeSlash bool) string {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	//dir, _ := os.Getwd()
-	if removeSlash == false {
-		dir = dir + "/"
-	}
-	return dir
 }
 
 func GetIP() ([]string, error) {
