@@ -5,8 +5,6 @@ import (
 	//"encoding/gob"
 	"encoding/json"
 	"net"
-	"os"
-	"path/filepath"
 	"reflect"
 	//"strconv"
 	//"fmt"
@@ -168,6 +166,27 @@ func JsonString(o interface{}) string {
 	return string(bs)
 }
 
+var _indentChar string
+
+func SetIndentChar(c string) {
+	_indentChar = c
+}
+
+func IndentChar() string {
+	if _indentChar == "" {
+		_indentChar = " "
+	}
+	return _indentChar
+}
+
+func JsonStringIndent(o interface{}, indentChar string) string {
+	bs, e := json.MarshalIndent(o, "", IndentChar())
+	if e != nil {
+		return "{}"
+	}
+	return string(bs)
+}
+
 func Unjson(b []byte, result interface{}) error {
 	e := json.Unmarshal(b, result)
 	return e
@@ -177,15 +196,6 @@ func UnjsonFromString(s string, result interface{}) error {
 	b := []byte(s)
 	e := json.Unmarshal(b, result)
 	return e
-}
-
-func PathDefault(removeSlash bool) string {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	//dir, _ := os.Getwd()
-	if removeSlash == false {
-		dir = dir + "/"
-	}
-	return dir
 }
 
 func GetIP() ([]string, error) {
