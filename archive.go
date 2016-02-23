@@ -9,16 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
-
-type Header struct {
-	Comment string
-	Extra   []byte
-	ModTime time.Time
-	Name    string
-	OS      byte
-}
 
 func ZipExtract(archive, target string) error {
 	reader, err := zip.OpenReader(archive)
