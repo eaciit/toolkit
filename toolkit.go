@@ -1,41 +1,32 @@
 package toolkit
 
 import (
-	"bytes"
-	"encoding/gob"
+	//"bytes"
+	//"encoding/gob"
 	"encoding/json"
 	"net"
-	"os"
-	"path/filepath"
 	"reflect"
 	//"strconv"
-	"fmt"
+	//"fmt"
+	//. "strconv"
 	"strings"
 	"time"
 )
 
-type M map[string]interface{}
-
-func (m M) Set(k string, v interface{}) M {
-	m[k] = v
-	return m
+func init() {
+	//Printf("Registering M")
+	RegisterGobObject(&M{})
 }
 
-func (m M) Get(k string, d ...interface{}) interface{} {
-	if get, b := m[k]; b {
-		return get
-	} else {
-		if len(d) > 0 {
-			return d[0]
-		} else {
-			return nil
-		}
-	}
-}
-
-func (m M) GetInt(k string) int {
-	i := m.Get(k, 0)
+/*
+func ToInt(i interface{}) int {
 	switch i.(type) {
+	case string:
+		iv, e := Atoi(i.(string))
+		if e != nil {
+			return 0
+		}
+		return iv
 	case int:
 		return i.(int)
 	case int32, int64:
@@ -49,9 +40,14 @@ func (m M) GetInt(k string) int {
 	}
 }
 
-func (m M) GetFloat32(k string) float32 {
-	i := m.Get(k, 0)
+func ToFloat32(i interface{}) float32 {
 	switch i.(type) {
+	case string:
+		f32, e := ParseFloat(i.(string), 32)
+		if e == nil {
+			return 0
+		}
+		return float32(f32)
 	case int, int32, int64:
 		return float32(i.(int))
 	case float32:
@@ -63,9 +59,14 @@ func (m M) GetFloat32(k string) float32 {
 	}
 }
 
-func (m M) GetFloat64(k string) float64 {
-	i := m.Get(k, 0)
+func ToFloat64(i interface{}) float64 {
 	switch i.(type) {
+	case string:
+		f64, e := ParseFloat(i.(string), 64)
+		if e == nil {
+			return 0
+		}
+		return f64
 	case int, int32, int64:
 		return float64(i.(int))
 	case float32:
@@ -76,21 +77,7 @@ func (m M) GetFloat64(k string) float64 {
 		return 0
 	}
 }
-
-func (m M) Has(k string) bool {
-	_, has := m[k]
-	return has
-}
-
-func HasMember(g []interface{}, find interface{}) bool {
-	found := false
-	for _, v := range g {
-		if v == find {
-			return true
-		}
-	}
-	return found
-}
+*/
 
 func MakeDate(layout string, value string) time.Time {
 	t, e := time.Parse(layout, value)
@@ -107,55 +94,7 @@ func AddTime(dt0 time.Time, dt1 time.Time) time.Time {
 	return dtx.Add(dt1.Sub(MakeDate("03:04", "00:00")))
 }
 
-func Id(i interface{}) interface{} {
-	//_ = "breakpoint"
-	idFields := []interface{}{"_id", "ID", "Id", "id"}
-	rv := reflect.ValueOf(i)
-
-	//-- get key
-	found := false
-	var id interface{}
-	if rv.Kind() == reflect.Map {
-		mapkeys := rv.MapKeys()
-		for _, mapkey := range mapkeys {
-			idkey := mapkey.String()
-			if HasMember(idFields, idkey) {
-				idValue := rv.MapIndex(mapkey)
-				if idValue.IsValid() {
-					found = true
-					id = idValue.Interface()
-				}
-			}
-		}
-	} else if rv.Kind() == reflect.Struct {
-		for _, idkey := range idFields {
-			idValue := rv.FieldByName(idkey.(string))
-			if idValue.IsValid() {
-				found = true
-				id = idValue.Interface()
-			}
-		}
-	} else if rv.Kind() == reflect.Ptr {
-		elem := rv.Elem()
-		for _, idkey := range idFields {
-			idValue := elem.FieldByName(idkey.(string))
-			if idValue.IsValid() {
-				found = true
-				id = idValue.Interface()
-			}
-		}
-	} else {
-		//_ = "breakpoint"
-		fmt.Printf("Kind: %s \n", rv.Kind().String())
-	}
-
-	if found {
-		return id
-	} else {
-		return nil
-	}
-}
-
+/*
 func Value(i interface{}, fieldName string, def interface{}) interface{} {
 	rv := reflect.ValueOf(i)
 	var ret interface{}
@@ -193,13 +132,20 @@ func Value(i interface{}, fieldName string, def interface{}) interface{} {
 		return ret
 	}
 }
+*/
 
 func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	ref := reflect.ValueOf(o)
 	if !ref.IsValid() {
 		return ref, false
 	}
-	es := ref.Elem()
+
+	var es reflect.Value
+	if ref.Kind() == reflect.Ptr {
+		es = ref.Elem()
+	} else {
+		es = ref
+	}
 	fi := es.FieldByName(fieldName)
 	if fi.IsValid() {
 		return fi, true
@@ -207,68 +153,49 @@ func Field(o interface{}, fieldName string) (reflect.Value, bool) {
 	return fi, false
 }
 
-func JsonString(o interface{}) string {
+func Jsonify(o interface{}) []byte {
 	bs, e := json.Marshal(o)
+	if e != nil {
+		bs, _ = json.Marshal(struct{}{})
+	}
+	return bs
+}
+
+func JsonString(o interface{}) string {
+	bs := Jsonify(o)
+	return string(bs)
+}
+
+var _indentChar string
+
+func SetIndentChar(c string) {
+	_indentChar = c
+}
+
+func IndentChar() string {
+	if _indentChar == "" {
+		_indentChar = " "
+	}
+	return _indentChar
+}
+
+func JsonStringIndent(o interface{}, indentChar string) string {
+	bs, e := json.MarshalIndent(o, "", IndentChar())
 	if e != nil {
 		return "{}"
 	}
 	return string(bs)
 }
 
-func ObjFromString(s string, result interface{}) error {
-	b := []byte(s)
+func Unjson(b []byte, result interface{}) error {
 	e := json.Unmarshal(b, result)
 	return e
 }
 
-func VariadicToSlice(objs ...interface{}) *[]interface{} {
-	result := []interface{}{}
-	for _, v := range objs {
-		result = append(result, v)
-	}
-	return &result
-}
-
-func MapToSlice(objects map[string]interface{}) []interface{} {
-	results := make([]interface{}, 0)
-	for _, v := range objects {
-		results = append(results, v)
-	}
-	return results
-}
-
-func PathDefault(removeSlash bool) string {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	//dir, _ := os.Getwd()
-	if removeSlash == false {
-		dir = dir + "/"
-	}
-	return dir
-}
-
-func DecodeByte(bytesData []byte, result interface{}) error {
-	buf := bytes.NewBuffer(bytesData)
-	dec := gob.NewDecoder(buf)
-	e := dec.Decode(result)
+func UnjsonFromString(s string, result interface{}) error {
+	b := []byte(s)
+	e := json.Unmarshal(b, result)
 	return e
-}
-
-func GetEncodeByte(obj interface{}) []byte {
-	b, e := EncodeByte(obj)
-	if e != nil {
-		return new(bytes.Buffer).Bytes()
-	}
-	return b
-}
-
-func EncodeByte(obj interface{}) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	gw := gob.NewEncoder(buf)
-	err := gw.Encode(obj)
-	if err != nil {
-		return buf.Bytes(), err
-	}
-	return buf.Bytes(), nil
 }
 
 func GetIP() ([]string, error) {

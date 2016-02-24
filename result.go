@@ -1,6 +1,8 @@
 package toolkit
 
 import (
+	"errors"
+	"fmt"
 	"time"
 )
 
@@ -16,6 +18,8 @@ type Result struct {
 	Message  string
 	Duration time.Duration
 	Data     interface{}
+
+	EncoderID string
 }
 
 func NewResult() *Result {
@@ -24,14 +28,72 @@ func NewResult() *Result {
 	return r
 }
 
-func (r *Result) SetError(e error) {
-	r.Status = Status_NOK
-	r.Message = e.Error()
+func (r *Result) IsEncoded() bool {
+	//fmt.Printf("Encoder ID: %s \n", r.EncoderID)
+	return r.EncoderID != ""
 }
 
-func (r *Result) SetErrorTxt(e string) {
+func (r *Result) SetData(o interface{}) *Result {
+	r.Data = o
+	return r
+}
+
+func (r *Result) SetBytes(data interface{}, EncoderID string) *Result {
+	if EncoderID == "" {
+		EncoderID = "json"
+	}
+	r.EncoderID = EncoderID
+	r.Data = ToBytes(data, r.EncoderID)
+	//fmt.Println("Encoder ID now is " + r.EncoderID)
+	return r
+}
+
+func (r *Result) GetFromBytes(out interface{}) error {
+	if r.IsEncoded() == false {
+		return errors.New("Data is not encoded")
+	}
+	return FromBytes(r.Data.([]byte), r.EncoderID, out)
+}
+
+func (r *Result) SetError(e error) *Result {
+	r.Status = Status_NOK
+	r.Message = e.Error()
+	return r
+}
+
+func (r *Result) SetErrorTxt(e string) *Result {
 	r.Status = Status_NOK
 	r.Message = e
+	return r
+}
+
+func (r *Result) Error() error {
+	var e error
+	if r.Status == Status_NOK {
+		e = errors.New(r.Message)
+	}
+	return e
+}
+
+func (r *Result) Cast(out interface{}, method string) error {
+	if method == "" {
+		method = "json"
+	}
+
+	if r.Data == nil {
+		return errors.New("Data is nil")
+	}
+
+	if method == "json" {
+		bs := Jsonify(r.Data)
+		e := Unjson(bs, out)
+		if e != nil {
+			return errors.New("Can not decode data. " + e.Error())
+		}
+		return nil
+	}
+
+	return errors.New("Unable to cast due to unknown cast method")
 }
 
 func (a *Result) Run(f func(data interface{}) (interface{}, error), parm interface{}) *Result {
@@ -52,4 +114,21 @@ func (a *Result) Run(f func(data interface{}) (interface{}, error), parm interfa
 	}
 	a.Duration = time.Since(t0)
 	return a
+}
+
+func CallResult(url, calltype string, data []byte) (*Result, error) {
+	r, e := HttpCall(url, calltype, data, M{}.Set("expectedstatus", 200))
+	if e != nil {
+		return nil, fmt.Errorf(url + " Call eror: " + e.Error())
+	}
+
+	result := NewResult()
+	edecode := Unjson(HttpContent(r), &result)
+	if edecode != nil {
+		return nil, fmt.Errorf(url + " Decode error: " + edecode.Error())
+	}
+	if result.Status == Status_NOK {
+		return result, fmt.Errorf(result.Message)
+	}
+	return result, nil
 }
