@@ -2,6 +2,7 @@ package toolkit
 
 import (
 	"fmt"
+	"strings"
 )
 
 var _randChars string
@@ -59,4 +60,13 @@ func Split(txt string, splitterChars []string) (splitValues []string,
 		}
 	}
 	return
+}
+
+func TrimByString(text, groupOfChar string) string {
+	return strings.Map(func(r rune) rune {
+		if strings.IndexRune(groupOfChar, r) < 0 {
+			return r
+		}
+		return -1
+	}, text)
 }
