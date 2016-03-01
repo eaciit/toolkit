@@ -197,6 +197,7 @@ func TarExtract(tarball, target string) error {
 func TarCompress(source, target string) error {
 	filename := filepath.Base(source)
 	target = filepath.Join(target, fmt.Sprintf("%s.tar", filename))
+	fmt.Println("==============>",target)
 	tarfile, err := os.Create(target)
 	if err != nil {
 		return err
@@ -224,6 +225,7 @@ func TarCompress(source, target string) error {
 		if err != nil {
 			return err
 		}
+		 
 
 		if baseDir != "" {
 			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
@@ -246,3 +248,61 @@ func TarCompress(source, target string) error {
 		return err
 	})
 }
+
+
+
+func TarCompress2(source, target string) error {
+    fw, err := os.Create(target)
+    if err != nil {
+        return err
+    }
+    defer fw.Close()
+
+    // gzip write
+    gw := gzip.NewWriter(fw)
+    defer gw.Close()
+
+    // tar write
+    tw := tar.NewWriter(gw)
+    defer tw.Close()
+
+    dir, err := os.Open(source)
+    if err != nil {
+        return err
+    }
+    defer dir.Close()
+
+    fis, err := dir.Readdir(0)
+    if err != nil {
+        return err
+    }
+
+    for _, fi := range fis {
+        if fi.IsDir() {
+            continue
+        }
+
+        fmt.Println(fi.Name())
+        fr, err := os.Open(dir.Name() + "/" + fi.Name())
+        if err != nil {
+            return err
+        }
+        defer fr.Close()
+
+        h := new(tar.Header)
+        h.Name = fi.Name()
+        h.Size = fi.Size()
+        h.Mode = int64(fi.Mode())
+        h.ModTime = fi.ModTime()
+
+        err = tw.WriteHeader(h)
+        if err != nil {
+            return err
+        }
+
+        _, err = io.Copy(tw, fr)
+        if err != nil {
+            return err
+        }
+    }
+ 	return nil}
