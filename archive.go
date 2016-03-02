@@ -11,43 +11,85 @@ import (
 	"strings"
 )
 
-func ZipExtract(archive, target string) error {
-	reader, err := zip.OpenReader(archive)
-	if err != nil {
-		return err
-	}
+// func ZipExtract(archive, target string) error {
+// 	reader, err := zip.OpenReader(archive)
+// 	if err != nil {
+// 		return err
+// 	} 
+// 	if err := os.MkdirAll(target, 0777); err != nil {
+// 		return err
+// 	}
 
-	if err := os.MkdirAll(target, 0666); err != nil {
-		return err
-	}
+// 	for _, file := range reader.File {
+// 		path := filepath.Join(target, file.Name)
+// 		if file.FileInfo().IsDir() {
+// 			os.MkdirAll(path, file.Mode())
+// 			continue
+// 		}
 
-	for _, file := range reader.File {
-		path := filepath.Join(target, file.Name)
-		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, file.Mode())
-			continue
-		}
+// 		fileReader, err := file.Open()
+// 		if err != nil {
+// 			return err
+// 		}
+// 		defer fileReader.Close()
 
-		fileReader, err := file.Open()
-		if err != nil {
-			return err
-		}
-		defer fileReader.Close()
+// 		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+// 		if err != nil {
+// 			return err
+// 		}
+// 		defer targetFile.Close()
 
-		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-		if err != nil {
-			return err
-		}
-		defer targetFile.Close()
+// 		if _, err := io.Copy(targetFile, fileReader); err != nil {
+// 			return err
+// 		}
+// 	}
 
-		if _, err := io.Copy(targetFile, fileReader); err != nil {
-			return err
-		}
-	}
+// 	return nil
+// }
 
-	return nil
+func ZipExtract(src, dest string) error {
+    r, err := zip.OpenReader(src)
+    if err != nil {
+        return err
+    }
+    defer r.Close()
+
+    for _, f := range r.File {
+        rc, err := f.Open()
+        if err != nil {
+            return err
+        }
+        defer rc.Close()
+
+        fpath := filepath.Join(dest, f.Name)
+        if f.FileInfo().IsDir() {
+            os.MkdirAll(fpath, f.Mode())
+        } else {
+            var fdir string
+            if lastIndex := strings.LastIndex(fpath,string(os.PathSeparator)); lastIndex > -1 {
+                fdir = fpath[:lastIndex]
+            }
+
+            err = os.MkdirAll(fdir, f.Mode())
+            if err != nil {
+          
+                return err
+            }
+            f, err := os.OpenFile(
+                fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+            if err != nil {
+                return err
+            }
+            defer f.Close()
+
+            _, err = io.Copy(f, rc)
+            if err != nil {
+                return err
+            }
+        }
+    }
+    return nil
 }
-
 func ZipCompress(source, target string) error {
 	zipfile, err := os.Create(target)
 	if err != nil {
@@ -116,6 +158,10 @@ func GzExtract(source, target string) error {
 	}
 	defer reader.Close()
 
+	if err := os.MkdirAll(target, 0777); err != nil {
+		return err
+	}
+
 	archive, err := gzip.NewReader(reader)
 	if err != nil {
 		return err
@@ -161,6 +207,11 @@ func TarExtract(tarball, target string) error {
 		return err
 	}
 	defer reader.Close()
+
+	if err := os.MkdirAll(target, 0777); err != nil {
+		return err
+	}
+
 	tarReader := tar.NewReader(reader)
 
 	for {
@@ -194,64 +245,62 @@ func TarExtract(tarball, target string) error {
 	return nil
 }
 
-func TarCompress(source, target string) error {
-	filename := filepath.Base(source)
-	target = filepath.Join(target, fmt.Sprintf("%s.tar", filename))
-	fmt.Println("==============>",target)
-	tarfile, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-	defer tarfile.Close()
+// func TarCompress(source, target string) error {
+// 	filename := filepath.Base(source)
+// 	target = filepath.Join(target, fmt.Sprintf("%s.tar", filename))
+// 	fmt.Println("==============>",target)
+// 	tarfile, err := os.Create(target)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer tarfile.Close()
 
-	tarball := tar.NewWriter(tarfile)
-	defer tarball.Close()
+// 	tarball := tar.NewWriter(tarfile)
+// 	defer tarball.Close()
 
-	info, err := os.Stat(source)
-	if err != nil {
-		return nil
-	}
+// 	info, err := os.Stat(source)
+// 	if err != nil {
+// 		return nil
+// 	}
 
-	var baseDir string
-	if info.IsDir() {
-		baseDir = filepath.Base(source)
-	}
+// 	var baseDir string
+// 	if info.IsDir() {
+// 		baseDir = filepath.Base(source)
+// 	}
 
-	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		header, err := tar.FileInfoHeader(info, info.Name())
-		if err != nil {
-			return err
-		}
+// 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+// 		if err != nil {
+// 			return err
+// 		}
+// 		header, err := tar.FileInfoHeader(info, info.Name())
+// 		if err != nil {
+// 			return err
+// 		}
 		 
 
-		if baseDir != "" {
-			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
-		}
+// 		if baseDir != "" {
+// 			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
+// 		}
 
-		if err := tarball.WriteHeader(header); err != nil {
-			return err
-		}
+// 		if err := tarball.WriteHeader(header); err != nil {
+// 			return err
+// 		}
 
-		if info.IsDir() {
-			return nil
-		}
+// 		if info.IsDir() {
+// 			return nil
+// 		}
 
-		file, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		_, err = io.Copy(tarball, file)
-		return err
-	})
-}
+// 		file, err := os.Open(path)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		defer file.Close()
+// 		_, err = io.Copy(tarball, file)
+// 		return err
+// 	})
+// }
 
-
-
-func TarCompress2(source, target string) error {
+func TarCompress(source, target string) error {
     fw, err := os.Create(target)
     if err != nil {
         return err
@@ -305,4 +354,7 @@ func TarCompress2(source, target string) error {
             return err
         }
     }
- 	return nil}
+ 	return nil
+}
+
+
