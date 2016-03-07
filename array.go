@@ -132,8 +132,8 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		}
 	} else {
 		//--- will be string
-		vv1o := vv1.Interface().(string)
-		vv2o := vv2.Interface().(string)
+		vv1o := ToString(vv1.Interface())
+		vv2o := ToString(vv2.Interface())
 		if op == "$eq" {
 			return vv1o == vv2o
 		} else if op == "$ne" {
