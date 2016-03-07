@@ -357,4 +357,53 @@ func TarCompress(source, target string) error {
  	return nil
 }
 
+func TarGzExtract(tarball, target string) error {
+	reader, err := os.Open(tarball)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
 
+	var fileReader io.ReadCloser = reader
+
+	if strings.HasSuffix(tarball, ".gz") {
+    	if fileReader, err = gzip.NewReader(reader);
+	    err != nil {
+	        fmt.Println(err)
+	        os.Exit(1)
+	    }
+	    defer fileReader.Close()
+	}
+
+	tarReader := tar.NewReader(fileReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		path := filepath.Join(target, header.Name)
+		info := header.FileInfo()
+		if info.IsDir() {
+			if err = os.MkdirAll(path, info.Mode()); err != nil {
+				return err
+			}
+			continue
+		}
+
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(file, tarReader)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
