@@ -41,6 +41,24 @@ func HasMember(g interface{}, find interface{}) bool {
 	return found
 }
 
+func MemberIndex(g interface{}, find interface{}) (found bool, in int) {
+	found = false
+	if IsSlice(g) == false {
+		return
+	}
+
+	count := SliceLen(g)
+	for in = 0; in < count; in++ {
+		v := SliceItem(g, in)
+		eq := Compare(v, find, "$eq")
+		if eq {
+			found = true
+			return
+		}
+	}
+	return
+}
+
 func ToInterfaceArray(o interface{}) []interface{} {
 	if IsSlice(o) == false {
 		return []interface{}{}
