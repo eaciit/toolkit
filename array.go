@@ -103,8 +103,10 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 
 		if strings.Contains(k2, "int") {
 			vv2o = float64(vv2.Int())
-		} else {
+		} else if strings.Contains(k2, "float") {
 			vv2o = vv2.Float()
+		} else {
+			vv2o = ToFloat64(vv2, 2, RoundingAuto)
 		}
 
 		//vv1o = ToFloat64(vv1)
