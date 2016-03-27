@@ -16,7 +16,10 @@ func (m M) Set(k string, v interface{}) M {
 
 func (m M) Get(k string, d ...interface{}) interface{} {
 	if get, b := m[k]; b {
-		return get
+        if IsNilOrEmpty(get){
+            get=d[0]
+        }
+        return get
 	} else {
 		if len(d) > 0 {
 			return d[0]

@@ -53,7 +53,27 @@ func TypeName(o interface{}) string {
 
 func IsNilOrEmpty(x interface{}) bool {
 	rv := reflect.Indirect(reflect.ValueOf(x))
-	return !rv.IsValid() || x == reflect.Zero(reflect.TypeOf(x)).Interface()
+    k := rv.Kind()
+    if k==reflect.Slice{
+        return false
+    } else if k==reflect.String {
+        if x.(string)=="" {
+            return true
+        } else {
+            return false
+        }
+    } else if k==reflect.Struct{
+        return false
+    } else if k==reflect.Bool{
+        return false
+    }
+    invalid := !rv.IsValid() 
+    iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
+    isnil := false
+    if !iszero{
+        isnil = rv.IsNil()
+    }
+    return invalid || iszero || isnil
 }
 
 func IsNumber(o interface{}) bool {
