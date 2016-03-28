@@ -66,14 +66,21 @@ func IsNilOrEmpty(x interface{}) bool {
         return false
     } else if k==reflect.Bool{
         return false
+    } else if strings.HasPrefix(k.String(),"int") || strings.Contains(k.String(),"float") {
+        iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
+        if iszero {
+            return true
+        } else {
+            return false
+        }
     }
+    
     invalid := !rv.IsValid() 
-    iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
-    isnil := false
-    if !iszero{
-        isnil = rv.IsNil()
+    if invalid{
+        return false
     }
-    return invalid || iszero || isnil
+    
+    return rv.IsNil()
 }
 
 func IsNumber(o interface{}) bool {
