@@ -11,85 +11,58 @@ import (
 	"strings"
 )
 
-// func ZipExtract(archive, target string) error {
-// 	reader, err := zip.OpenReader(archive)
-// 	if err != nil {
-// 		return err
-// 	} 
-// 	if err := os.MkdirAll(target, 0777); err != nil {
-// 		return err
-// 	}
+func ZipExtract(archive, target string) error {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		return err
+	}
 
-// 	for _, file := range reader.File {
-// 		path := filepath.Join(target, file.Name)
-// 		if file.FileInfo().IsDir() {
-// 			os.MkdirAll(path, file.Mode())
-// 			continue
-// 		}
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
 
-// 		fileReader, err := file.Open()
-// 		if err != nil {
-// 			return err
-// 		}
-// 		defer fileReader.Close()
+	for _, file := range reader.File {
+		path := filepath.Join(target, file.Name)
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(path, file.Mode())
+			continue
+		}
 
-// 		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-// 		if err != nil {
-// 			return err
-// 		}
-// 		defer targetFile.Close()
+		fileReader, err := file.Open()
+		if err != nil {
 
-// 		if _, err := io.Copy(targetFile, fileReader); err != nil {
-// 			return err
-// 		}
-// 	}
+			if fileReader != nil {
+				fileReader.Close()
+			}
 
-// 	return nil
-// }
+			return err
+		}
 
-func ZipExtract(src, dest string) error {
-    r, err := zip.OpenReader(src)
-    if err != nil {
-        return err
-    }
-    defer r.Close()
+		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			fileReader.Close()
 
-    for _, f := range r.File {
-        rc, err := f.Open()
-        if err != nil {
-            return err
-        }
-        defer rc.Close()
+			if targetFile != nil {
+				targetFile.Close()
+			}
 
-        fpath := filepath.Join(dest, f.Name)
-        if f.FileInfo().IsDir() {
-            os.MkdirAll(fpath, f.Mode())
-        } else {
-            var fdir string
-            if lastIndex := strings.LastIndex(fpath,string(os.PathSeparator)); lastIndex > -1 {
-                fdir = fpath[:lastIndex]
-            }
+			return err
+		}
 
-            err = os.MkdirAll(fdir, f.Mode())
-            if err != nil {
-          
-                return err
-            }
-            f, err := os.OpenFile(
-                fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-            if err != nil {
-                return err
-            }
-            defer f.Close()
+		if _, err := io.Copy(targetFile, fileReader); err != nil {
+			fileReader.Close()
+			targetFile.Close()
 
-            _, err = io.Copy(f, rc)
-            if err != nil {
-                return err
-            }
-        }
-    }
-    return nil
+			return err
+		}
+
+		fileReader.Close()
+		targetFile.Close()
+	}
+
+	return nil
 }
+
 func ZipCompress(source, target string) error {
 	zipfile, err := os.Create(target)
 	if err != nil {
@@ -276,7 +249,6 @@ func TarExtract(tarball, target string) error {
 // 		if err != nil {
 // 			return err
 // 		}
-		 
 
 // 		if baseDir != "" {
 // 			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
@@ -301,60 +273,60 @@ func TarExtract(tarball, target string) error {
 // }
 
 func TarCompress(source, target string) error {
-    fw, err := os.Create(target)
-    if err != nil {
-        return err
-    }
-    defer fw.Close()
+	fw, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer fw.Close()
 
-    // gzip write
-    gw := gzip.NewWriter(fw)
-    defer gw.Close()
+	// gzip write
+	gw := gzip.NewWriter(fw)
+	defer gw.Close()
 
-    // tar write
-    tw := tar.NewWriter(gw)
-    defer tw.Close()
+	// tar write
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
 
-    dir, err := os.Open(source)
-    if err != nil {
-        return err
-    }
-    defer dir.Close()
+	dir, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
 
-    fis, err := dir.Readdir(0)
-    if err != nil {
-        return err
-    }
+	fis, err := dir.Readdir(0)
+	if err != nil {
+		return err
+	}
 
-    for _, fi := range fis {
-        if fi.IsDir() {
-            continue
-        }
+	for _, fi := range fis {
+		if fi.IsDir() {
+			continue
+		}
 
-        fmt.Println(fi.Name())
-        fr, err := os.Open(dir.Name() + "/" + fi.Name())
-        if err != nil {
-            return err
-        }
-        defer fr.Close()
+		fmt.Println(fi.Name())
+		fr, err := os.Open(dir.Name() + "/" + fi.Name())
+		if err != nil {
+			return err
+		}
+		defer fr.Close()
 
-        h := new(tar.Header)
-        h.Name = fi.Name()
-        h.Size = fi.Size()
-        h.Mode = int64(fi.Mode())
-        h.ModTime = fi.ModTime()
+		h := new(tar.Header)
+		h.Name = fi.Name()
+		h.Size = fi.Size()
+		h.Mode = int64(fi.Mode())
+		h.ModTime = fi.ModTime()
 
-        err = tw.WriteHeader(h)
-        if err != nil {
-            return err
-        }
+		err = tw.WriteHeader(h)
+		if err != nil {
+			return err
+		}
 
-        _, err = io.Copy(tw, fr)
-        if err != nil {
-            return err
-        }
-    }
- 	return nil
+		_, err = io.Copy(tw, fr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func TarGzExtract(tarball, target string) error {
@@ -367,12 +339,11 @@ func TarGzExtract(tarball, target string) error {
 	var fileReader io.ReadCloser = reader
 
 	if strings.HasSuffix(tarball, ".gz") {
-    	if fileReader, err = gzip.NewReader(reader);
-	    err != nil {
-	        fmt.Println(err)
-	        os.Exit(1)
-	    }
-	    defer fileReader.Close()
+		if fileReader, err = gzip.NewReader(reader); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		defer fileReader.Close()
 	}
 
 	tarReader := tar.NewReader(fileReader)
