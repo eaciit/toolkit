@@ -85,7 +85,7 @@ func getFormatDate(o interface{}, dateFormat string) string {
 	for _, k := range keys {
 		dateFormat = strings.Replace(dateFormat, dateOrder[k], dateMap[dateOrder[k]], -1)
 	}
-
+   
 	if strings.Contains(dateFormat, "H") {
 		if Value(o).Kind() == reflect.String {
 

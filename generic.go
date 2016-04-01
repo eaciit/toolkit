@@ -53,7 +53,34 @@ func TypeName(o interface{}) string {
 
 func IsNilOrEmpty(x interface{}) bool {
 	rv := reflect.Indirect(reflect.ValueOf(x))
-	return !rv.IsValid() || x == reflect.Zero(reflect.TypeOf(x)).Interface()
+    k := rv.Kind()
+    if k==reflect.Slice{
+        return false
+    } else if k==reflect.String {
+        if x.(string)=="" {
+            return true
+        } else {
+            return false
+        }
+    } else if k==reflect.Struct{
+        return false
+    } else if k==reflect.Bool{
+        return false
+    } else if strings.HasPrefix(k.String(),"int") || strings.Contains(k.String(),"float") {
+        iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
+        if iszero {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    invalid := !rv.IsValid() 
+    if invalid{
+        return false
+    }
+    
+    return rv.IsNil()
 }
 
 func IsNumber(o interface{}) bool {

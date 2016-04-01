@@ -41,6 +41,24 @@ func HasMember(g interface{}, find interface{}) bool {
 	return found
 }
 
+func MemberIndex(g interface{}, find interface{}) (found bool, in int) {
+	found = false
+	if IsSlice(g) == false {
+		return
+	}
+
+	count := SliceLen(g)
+	for in = 0; in < count; in++ {
+		v := SliceItem(g, in)
+		eq := Compare(v, find, "$eq")
+		if eq {
+			found = true
+			return
+		}
+	}
+	return
+}
+
 func ToInterfaceArray(o interface{}) []interface{} {
 	if IsSlice(o) == false {
 		return []interface{}{}
@@ -85,8 +103,10 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 
 		if strings.Contains(k2, "int") {
 			vv2o = float64(vv2.Int())
-		} else {
+		} else if strings.Contains(k2, "float") {
 			vv2o = vv2.Float()
+		} else {
+			vv2o = ToFloat64(vv2, 2, RoundingAuto)
 		}
 
 		//vv1o = ToFloat64(vv1)
@@ -132,8 +152,8 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		}
 	} else {
 		//--- will be string
-		vv1o := vv1.Interface().(string)
-		vv2o := vv2.Interface().(string)
+		vv1o := ToString(vv1.Interface())
+		vv2o := ToString(vv2.Interface())
 		if op == "$eq" {
 			return vv1o == vv2o
 		} else if op == "$ne" {

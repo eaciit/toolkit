@@ -17,7 +17,7 @@ func ZipExtract(archive, target string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(target, 0666); err != nil {
+	if err := os.MkdirAll(target, 0755); err != nil {
 		return err
 	}
 
@@ -30,19 +30,34 @@ func ZipExtract(archive, target string) error {
 
 		fileReader, err := file.Open()
 		if err != nil {
+
+			if fileReader != nil {
+				fileReader.Close()
+			}
+
 			return err
 		}
-		defer fileReader.Close()
 
 		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 		if err != nil {
+			fileReader.Close()
+
+			if targetFile != nil {
+				targetFile.Close()
+			}
+
 			return err
 		}
-		defer targetFile.Close()
 
 		if _, err := io.Copy(targetFile, fileReader); err != nil {
+			fileReader.Close()
+			targetFile.Close()
+
 			return err
 		}
+
+		fileReader.Close()
+		targetFile.Close()
 	}
 
 	return nil
@@ -116,6 +131,10 @@ func GzExtract(source, target string) error {
 	}
 	defer reader.Close()
 
+	if err := os.MkdirAll(target, 0777); err != nil {
+		return err
+	}
+
 	archive, err := gzip.NewReader(reader)
 	if err != nil {
 		return err
@@ -161,6 +180,11 @@ func TarExtract(tarball, target string) error {
 		return err
 	}
 	defer reader.Close()
+
+	if err := os.MkdirAll(target, 0777); err != nil {
+		return err
+	}
+
 	tarReader := tar.NewReader(reader)
 
 	for {
@@ -194,55 +218,163 @@ func TarExtract(tarball, target string) error {
 	return nil
 }
 
+// func TarCompress(source, target string) error {
+// 	filename := filepath.Base(source)
+// 	target = filepath.Join(target, fmt.Sprintf("%s.tar", filename))
+// 	fmt.Println("==============>",target)
+// 	tarfile, err := os.Create(target)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer tarfile.Close()
+
+// 	tarball := tar.NewWriter(tarfile)
+// 	defer tarball.Close()
+
+// 	info, err := os.Stat(source)
+// 	if err != nil {
+// 		return nil
+// 	}
+
+// 	var baseDir string
+// 	if info.IsDir() {
+// 		baseDir = filepath.Base(source)
+// 	}
+
+// 	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+// 		if err != nil {
+// 			return err
+// 		}
+// 		header, err := tar.FileInfoHeader(info, info.Name())
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		if baseDir != "" {
+// 			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
+// 		}
+
+// 		if err := tarball.WriteHeader(header); err != nil {
+// 			return err
+// 		}
+
+// 		if info.IsDir() {
+// 			return nil
+// 		}
+
+// 		file, err := os.Open(path)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		defer file.Close()
+// 		_, err = io.Copy(tarball, file)
+// 		return err
+// 	})
+// }
+
 func TarCompress(source, target string) error {
-	filename := filepath.Base(source)
-	target = filepath.Join(target, fmt.Sprintf("%s.tar", filename))
-	tarfile, err := os.Create(target)
+	fw, err := os.Create(target)
 	if err != nil {
 		return err
 	}
-	defer tarfile.Close()
+	defer fw.Close()
 
-	tarball := tar.NewWriter(tarfile)
-	defer tarball.Close()
+	// gzip write
+	gw := gzip.NewWriter(fw)
+	defer gw.Close()
 
-	info, err := os.Stat(source)
+	// tar write
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	dir, err := os.Open(source)
 	if err != nil {
-		return nil
+		return err
+	}
+	defer dir.Close()
+
+	fis, err := dir.Readdir(0)
+	if err != nil {
+		return err
 	}
 
-	var baseDir string
-	if info.IsDir() {
-		baseDir = filepath.Base(source)
-	}
+	for _, fi := range fis {
+		if fi.IsDir() {
+			continue
+		}
 
-	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+		fmt.Println(fi.Name())
+		fr, err := os.Open(dir.Name() + "/" + fi.Name())
 		if err != nil {
 			return err
 		}
-		header, err := tar.FileInfoHeader(info, info.Name())
+		defer fr.Close()
+
+		h := new(tar.Header)
+		h.Name = fi.Name()
+		h.Size = fi.Size()
+		h.Mode = int64(fi.Mode())
+		h.ModTime = fi.ModTime()
+
+		err = tw.WriteHeader(h)
 		if err != nil {
 			return err
 		}
 
-		if baseDir != "" {
-			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
+		_, err = io.Copy(tw, fr)
+		if err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		if err := tarball.WriteHeader(header); err != nil {
+func TarGzExtract(tarball, target string) error {
+	reader, err := os.Open(tarball)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	var fileReader io.ReadCloser = reader
+
+	if strings.HasSuffix(tarball, ".gz") {
+		if fileReader, err = gzip.NewReader(reader); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		defer fileReader.Close()
+	}
+
+	tarReader := tar.NewReader(fileReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			return err
 		}
 
+		path := filepath.Join(target, header.Name)
+		info := header.FileInfo()
 		if info.IsDir() {
-			return nil
+			if err = os.MkdirAll(path, info.Mode()); err != nil {
+				return err
+			}
+			continue
 		}
 
-		file, err := os.Open(path)
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
 		if err != nil {
 			return err
 		}
 		defer file.Close()
-		_, err = io.Copy(tarball, file)
-		return err
-	})
+		_, err = io.Copy(file, tarReader)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
