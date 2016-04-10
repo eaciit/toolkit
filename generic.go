@@ -85,8 +85,8 @@ func IsNilOrEmpty(x interface{}) bool {
 
 func IsNumber(o interface{}) bool {
 	v := reflect.Indirect(reflect.ValueOf(o))
-	ts := v.Type().String()
-	if strings.Contains(ts, "int") || strings.Contains(ts, "float") {
+	ts := strings.ToLower(v.Type().String())
+	if (strings.Contains(ts, "int") || strings.Contains(ts, "float")) && !strings.HasPrefix(ts, "interface{}") {
 		return true
 	}
 	return false
@@ -247,4 +247,18 @@ func Value2Interface(vi reflect.Value) interface{} {
 	} else {
 		return vi.Interface()
 	}
+}
+
+func ExecFunc(fn interface{}, ins ...interface{})(outs []reflect.Value, e error){
+    rvfn := reflect.ValueOf(fn)
+    if rvfn.Kind()!=reflect.Func{
+        e=errors.New("Execfunc: First parameter should be a function")
+        return
+    }
+    var rvins []reflect.Value
+    for _, in := range ins{
+        rvins = append(rvins, reflect.ValueOf(in))
+    }
+    outs=rvfn.Call(rvins)
+    return
 }

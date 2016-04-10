@@ -12,6 +12,29 @@ func killApp(code int) {
 	defer os.Exit(code)
 }
 
+func TestExecFn(t *testing.T){
+    defer killApp(100)
+    
+    type Obj struct{
+        Name string
+        Len int
+    }
+    
+    rvobj, _ := ExecFunc(func(s string)*Obj{
+        o := new(Obj)
+        o.Name = s 
+        o.Len = len(s)
+        return o
+    },"Arief Darmawan")
+    
+    obj := rvobj[0].Interface().(*Obj)
+    Println("Got:", JsonString(obj))
+    
+    if obj.Name!="Arief Darmawan"{
+        t.Fatalf("error")
+    }
+}
+
 func TestFormulaSimple(t *testing.T) {
 	//defer killApp(50)
 	yr := float64(2016)
