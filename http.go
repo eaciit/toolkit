@@ -174,3 +174,15 @@ func HttpGetCookieJar(url string, callType string,
 
 	return jar, errCall
 }
+
+type builder struct {
+	handler func(http.ResponseWriter, *http.Request)
+}
+
+func (b builder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	b.handler(w, r)
+}
+
+func ToHttpHandler(handleFunc func(http.ResponseWriter, *http.Request)) http.Handler {
+	return builder{handler: handleFunc}
+}
