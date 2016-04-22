@@ -89,6 +89,7 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 	t := strings.ToLower(vv1.Type().String())
 
 	k2 := strings.ToLower(vv2.Kind().String())
+	kv2 := strings.ToLower(TypeName(v2))
 
 	if strings.Contains(k, "int") || strings.Contains(k, "float") {
 		//--- is a number
@@ -124,9 +125,14 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		} else if op == "$gte" {
 			return vv1o >= vv2o
 		}
-	} else if strings.Contains(t, "time.time") {
+	} else if strings.Contains(t, "time.time") || strings.Contains(kv2, "time.time") {
 		//--- is a time.Time
-		vv1o := vv1.Interface().(time.Time)
+		vv1o := time.Now()
+		if !strings.Contains(t, "time.time") {
+			vv1o, _ = time.Parse(time.RFC3339, v1.(string))
+		} else {
+			vv1o = vv1.Interface().(time.Time)
+		}
 		vv2o := vv2.Interface().(time.Time)
 		if op == "$eq" {
 			return vv1o == vv2o
