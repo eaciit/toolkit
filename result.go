@@ -62,7 +62,7 @@ func (r *Result) GetFromBytes(out interface{}) error {
 
 func (r *Result) SetDuration(){
 	r.Duration = time.Since(r.time0)
-	r.DurationTxt = d.String()
+	r.DurationTxt = r.Duration.String()
 }
 
 func (r *Result) SetError(e error) *Result {
