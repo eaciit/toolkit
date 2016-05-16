@@ -17,14 +17,18 @@ type Result struct {
 	Status   ResultStatus
 	Message  string
 	Duration time.Duration
+	DurationTxt string
 	Data     interface{}
 
 	EncoderID string
+	
+	time0 time.Time
 }
 
 func NewResult() *Result {
 	r := new(Result)
 	r.Status = Status_OK
+	r.time0 = time.Now()
 	return r
 }
 
@@ -35,6 +39,7 @@ func (r *Result) IsEncoded() bool {
 
 func (r *Result) SetData(o interface{}) *Result {
 	r.Data = o
+	r.SetDuration()
 	return r
 }
 
@@ -55,15 +60,22 @@ func (r *Result) GetFromBytes(out interface{}) error {
 	return FromBytes(r.Data.([]byte), r.EncoderID, out)
 }
 
+func (r *Result) SetDuration(){
+	r.Duration = time.Since(r.time0)
+	r.DurationTxt = d.String()
+}
+
 func (r *Result) SetError(e error) *Result {
 	r.Status = Status_NOK
 	r.Message = e.Error()
+	r.SetDuration()
 	return r
 }
 
 func (r *Result) SetErrorTxt(e string) *Result {
 	r.Status = Status_NOK
 	r.Message = e
+	r.SetDuration()
 	return r
 }
 
