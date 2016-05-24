@@ -3,6 +3,7 @@ package toolkit
 import (
 	"errors"
 	"reflect"
+	"strings"
 )
 
 func IdInfo(i interface{}) (idfield string, id interface{}) {
@@ -48,6 +49,32 @@ func IdInfo(i interface{}) (idfield string, id interface{}) {
 		//_ = "breakpoint"
 		//fmt.Printf("Kind: %s \n", rv.Kind().String())
 	}
+	
+	if idfield=="" {
+		var elem reflect.Value
+		if rv.Kind()==reflect.Struct{
+			elem = rv
+		} else if rv.Kind()==reflect.Ptr{
+			elem = rv.Elem()
+		}
+		
+		fc := elem.NumField
+		ft := elem.Type()
+		for fi:=0;fi<fc;fi++{
+			idValue := elem.FieldByIndex(fi)
+			if idValue.IsValid() {
+				tag := ft.Field(fi).Tag
+				if tag!="" {
+					if strings.Contains(tag,"bson:\"_id\""){
+						fieldname := ft.Field(fi).Name
+						idfield = fieldname
+					}
+				}
+				return
+			}
+		}
+	}
+	
 	return
 }
 
