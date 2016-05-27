@@ -12,27 +12,85 @@ func killApp(code int) {
 	defer os.Exit(code)
 }
 
-func TestExecFn(t *testing.T){
-    defer killApp(100)
-    
-    type Obj struct{
-        Name string
-        Len int
-    }
-    
-    rvobj, _ := ExecFunc(func(s string)*Obj{
-        o := new(Obj)
-        o.Name = s 
-        o.Len = len(s)
-        return o
-    },"Arief Darmawan")
-    
-    obj := rvobj[0].Interface().(*Obj)
-    Println("Got:", JsonString(obj))
-    
-    if obj.Name!="Arief Darmawan"{
-        t.Fatalf("error")
-    }
+func TestMtoStruct(t *testing.T) {
+	type SubStruct struct {
+		Info string
+	}
+
+	type SomeStruct struct {
+		Title string
+		Value int
+		IsOK  bool
+		Sub   SubStruct
+	}
+
+	data := M{
+		"Title": "Test",
+		"Value": 1232,
+		"IsOK":  true,
+		"Sub": M{
+			"Info": "hahahah",
+		},
+	}
+
+	// M to Struct
+	var result1 = new(SomeStruct)
+	err := MtoStruct(data, result1)
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	t.Logf("M to Struct\n%#v\n", result1)
+
+	// Struct to M
+	result2 := &(M{})
+	err = StructToM(result1, result2)
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	t.Logf("Struct to M\n%#v\n", result2)
+
+	// Set property by name
+	err = SetPropByName(&result1, "Title", "OK")
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	t.Logf("Set property by name\n%#v\n", result1)
+
+	// Set property by name which is object
+	sub2 := new(SubStruct)
+	sub2.Info = "test"
+	err = SetPropByName(&result1, "Sub", sub2)
+	if err != nil {
+		t.Fatalf(err.Error())
+		return
+	}
+	t.Logf("Set property (sub struct) by name\n%#v\n", result1)
+}
+
+func TestExecFn(t *testing.T) {
+	defer killApp(100)
+
+	type Obj struct {
+		Name string
+		Len  int
+	}
+
+	rvobj, _ := ExecFunc(func(s string) *Obj {
+		o := new(Obj)
+		o.Name = s
+		o.Len = len(s)
+		return o
+	}, "Arief Darmawan")
+
+	obj := rvobj[0].Interface().(*Obj)
+	Println("Got:", JsonString(obj))
+
+	if obj.Name != "Arief Darmawan" {
+		t.Fatalf("error")
+	}
 }
 
 func TestFormulaSimple(t *testing.T) {
