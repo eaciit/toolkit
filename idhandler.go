@@ -58,15 +58,15 @@ func IdInfo(i interface{}) (idfield string, id interface{}) {
 			elem = rv.Elem()
 		}
 		
-		fc := elem.NumField
+		fc := elem.NumField()
 		ft := elem.Type()
 		for fi:=0;fi<fc;fi++{
-			idValue := elem.FieldByIndex(fi)
+			idValue := elem.FieldByIndex([]int{fi})
 			if idValue.IsValid() {
-				tag := ft.Field(fi).Tag
-				if tag!="" {
-					if strings.Contains(tag,"bson:\"_id\""){
-						fieldname := ft.Field(fi).Name
+				tags := strings.Split(ft.Field(fi).Tag.Get("bson"),",")
+				if len(tags)>0 {
+					fieldname := ft.Field(fi).Name
+					if HasMember(tags,"_id"){
 						idfield = fieldname
 					}
 				}

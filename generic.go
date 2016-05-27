@@ -88,8 +88,39 @@ func IsNumber(o interface{}) bool {
 	ts := strings.ToLower(v.Type().String())
 	if (strings.Contains(ts, "int") || strings.Contains(ts, "float")) && !strings.HasPrefix(ts, "interface{}") {
 		return true
-	}
+	} 
 	return false
+}
+
+func IsStringNumber(txt string, decsep string)(f float64, e error){
+	hasDes := false
+	newtxt := "0"
+	decPoint := 0
+	for _, c := range txt{
+		s := string(c)
+		if strings.Compare(s,"0") > 0 && strings.Compare(s,"9")<0{
+			newtxt += s
+			if hasDes {
+				decPoint+=1
+			}
+		} else if s==decsep{
+			if !hasDes{
+				newtxt += "."
+				hasDes=true
+			} else {
+				e = errors.New("IsStringNumber: Multiple decimal separator found")
+				return
+			}
+		} else {
+			e = errors.New("IsStringNumber: Wrong character " + txt)
+			return
+		}
+	}
+	if strings.HasSuffix(newtxt,"."){
+		newtxt += "0"
+	}
+	f = ToFloat64(newtxt,decPoint,RoundingAuto)
+	return
 }
 
 func IsPointer(o interface{}) bool {
