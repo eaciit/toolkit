@@ -31,3 +31,8 @@ func RandInt(limit int) int {
 	initRandomSource()
 	return r.Intn(limit)
 }
+
+func RandFloat(limit int, decimal int) float64 {
+	initRandomSource()
+	return float64(r.Intn(limit+decimal)) / float64(10*decimal)
+}
