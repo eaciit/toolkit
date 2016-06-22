@@ -96,9 +96,10 @@ func IsStringNumber(txt string, decsep string)(f float64, e error){
 	hasDes := false
 	newtxt := "0"
 	decPoint := 0
+	//Printf("%v ", txt)
 	for _, c := range txt{
 		s := string(c)
-		if strings.Compare(s,"0") > 0 && strings.Compare(s,"9")<0{
+		if strings.Compare(s,"0")>=0 && strings.Compare(s,"9")<=0{
 			newtxt += s
 			if hasDes {
 				decPoint+=1
@@ -112,6 +113,7 @@ func IsStringNumber(txt string, decsep string)(f float64, e error){
 				return
 			}
 		} else {
+			//Printfn("%v %v", txt, s)
 			e = errors.New("IsStringNumber: Wrong character " + txt)
 			return
 		}
@@ -119,6 +121,7 @@ func IsStringNumber(txt string, decsep string)(f float64, e error){
 	if strings.HasSuffix(newtxt,"."){
 		newtxt += "0"
 	}
+	//Printfn("%v",newtxt)
 	f = ToFloat64(newtxt,decPoint,RoundingAuto)
 	return
 }
