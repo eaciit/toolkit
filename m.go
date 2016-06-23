@@ -77,12 +77,12 @@ func (m *M) Cast(k string, d interface{}) error {
 
 func (m M) GetFloat64(k string) float64 {
 	i := m.Get(k, 0)
-	return ToFloat64(i, 4, RoundingAuto)
+	return ToFloat64(i, 6, RoundingAuto)
 }
 
 func (m M) GetString(k string) string {
 	s := m.Get(k, "")
-	return s.(string)
+	return ToString(s)
 }
 
 func (m M) GetInt(k string) int {
