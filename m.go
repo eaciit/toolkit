@@ -104,6 +104,22 @@ func (m M) Has(k string) bool {
 	return has
 }
 
+func (m M) Keys() []string {
+	var ret []string
+	for k, _ := range m {
+		ret = append(ret, k)
+	}
+	return ret
+}
+
+func (m M) Values() []interface{} {
+	var ret []interface{}
+	for _, v := range m {
+		ret = append(ret, v)
+	}
+	return ret
+}
+
 func CopyM(from, to *M,
 	copyFieldIfNotExist bool,
 	exceptFields []string) {
