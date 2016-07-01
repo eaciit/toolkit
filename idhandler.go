@@ -49,32 +49,34 @@ func IdInfo(i interface{}) (idfield string, id interface{}) {
 		//_ = "breakpoint"
 		//fmt.Printf("Kind: %s \n", rv.Kind().String())
 	}
-	
-	if idfield=="" {
+
+	if idfield == "" {
 		var elem reflect.Value
-		if rv.Kind()==reflect.Struct{
+		if rv.Kind() == reflect.Struct {
 			elem = rv
-		} else if rv.Kind()==reflect.Ptr{
+		} else if rv.Kind() == reflect.Ptr {
 			elem = rv.Elem()
 		}
-		
-		fc := elem.NumField()
-		ft := elem.Type()
-		for fi:=0;fi<fc;fi++{
-			idValue := elem.FieldByIndex([]int{fi})
-			if idValue.IsValid() {
-				tags := strings.Split(ft.Field(fi).Tag.Get("bson"),",")
-				if len(tags)>0 {
-					fieldname := ft.Field(fi).Name
-					if HasMember(tags,"_id"){
-						idfield = fieldname
+
+		if elem.IsValid() {
+			fc := elem.NumField()
+			ft := elem.Type()
+			for fi := 0; fi < fc; fi++ {
+				idValue := elem.FieldByIndex([]int{fi})
+				if idValue.IsValid() {
+					tags := strings.Split(ft.Field(fi).Tag.Get("bson"), ",")
+					if len(tags) > 0 {
+						fieldname := ft.Field(fi).Name
+						if HasMember(tags, "_id") {
+							idfield = fieldname
+						}
 					}
+					return
 				}
-				return
 			}
 		}
 	}
-	
+
 	return
 }
 
