@@ -33,6 +33,14 @@ func Sprintf(pattern string, parms ...interface{}) string {
 	return fmt.Sprintf(pattern, parms...)
 }
 
+func Formatf(pattern string, parms ...interface{}) string {
+	r := pattern
+	for i, v := range parms {
+		r = strings.Replace(r, Sprintf("{%d}", i), v.(string), -1)
+	}
+	return r
+}
+
 func Printf(pattern string, parms ...interface{}) {
 	fmt.Printf(pattern, parms...)
 }
