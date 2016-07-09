@@ -275,7 +275,7 @@ func Value2Interface(vi reflect.Value) interface{} {
 	vik := vi.Type().String()
 	if strings.Contains(vik, "string") {
 		return vi.String()
-	} else if strings.Contains(vik, "int") && !strings.Contains(vik, "interface") {
+	} else if (vik == "int" || vik == "int8" || vik == "int16" || vik == "int32" || strings.Contains(vik, "uint")) && !strings.Contains(vik, "interface") {
 		return int(vi.Int())
 	} else if strings.Contains(vik, "float") {
 		return vi.Float()
