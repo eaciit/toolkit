@@ -27,10 +27,15 @@ func Kind(o interface{}) reflect.Kind {
 func ToString(o interface{}) string {
 	v := Value(o)
 	k := v.Kind()
+	t := v.Type()
 	if k == reflect.Interface && v.IsNil() {
 		return ""
 	} else if k == reflect.String {
-		return o.(string)
+		if t.Name() == "string" {
+			return o.(string)
+		} else {
+			return Sprintf("%s", o)
+		}
 	} else if k == reflect.Int || k == reflect.Int8 ||
 		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
 		return fmt.Sprintf("%d", o)
@@ -85,7 +90,7 @@ func getFormatDate(o interface{}, dateFormat string) string {
 	for _, k := range keys {
 		dateFormat = strings.Replace(dateFormat, dateOrder[k], dateMap[dateOrder[k]], -1)
 	}
-   
+
 	if strings.Contains(dateFormat, "H") {
 		if Value(o).Kind() == reflect.String {
 

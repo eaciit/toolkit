@@ -60,7 +60,7 @@ func IsNilOrEmpty(x interface{}) bool {
 	if k == reflect.Slice {
 		return false
 	} else if k == reflect.String {
-		if x.(string) == "" {
+		if ToString(x) == "" {
 			return true
 		} else {
 			return false
