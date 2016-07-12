@@ -36,3 +36,11 @@ func RandFloat(limit int, decimal int) float64 {
 	initRandomSource()
 	return float64(r.Intn(limit+decimal)) / float64(10*decimal)
 }
+
+func Div(f1, f2 float64) float64 {
+	if f2 == 0 {
+		return 0
+	}
+
+	return f1 / f2
+}
