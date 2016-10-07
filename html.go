@@ -1,0 +1,35 @@
+package toolkit
+
+import (
+	"fmt"
+	"golang.org/x/net/html"
+	"strings"
+)
+
+func Html2text(source string) (string, error) {
+	doc, err := html.Parse(strings.NewReader(source))
+	if err != nil {
+		return "", err
+	}
+
+	res := ""
+
+	var f func(n *html.Node)
+	f = func(n *html.Node) {
+		switch n.Type {
+		case html.ElementNode:
+			switch n.Data {
+			case "li", "br":
+				res = fmt.Sprintf("%s\n", res)
+			}
+		case html.TextNode:
+			res = fmt.Sprintf("%s%s ", res, n.Data)
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+
+	return strings.TrimSpace(res), nil
+}
