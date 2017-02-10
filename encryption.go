@@ -28,7 +28,7 @@ func GenerateRandomString(baseChars string, n int) string {
 	return rnd
 }
 
-func CheckSumFile(fileLocation string) string {
+func FileChecksum(fileLocation string) string {
 	f, err := os.Open(fileLocation)
 	if f != nil {
 		defer f.Close()
