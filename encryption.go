@@ -3,6 +3,9 @@ package toolkit
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"io"
+	"os"
 )
 
 func MD5String(s string) string {
@@ -23,4 +26,23 @@ func GenerateRandomString(baseChars string, n int) string {
 		rnd += string(baseChars[x])
 	}
 	return rnd
+}
+
+func CheckSumFile(fileLocation string) string {
+	f, err := os.Open(fileLocation)
+	if f != nil {
+		defer f.Close()
+	}
+	if err != nil {
+		return ""
+	}
+
+	hash := md5.New()
+	_, err = io.Copy(hash, f)
+	if err != nil {
+		return ""
+	}
+
+	hashed := hash.Sum(nil)
+	return fmt.Sprintf("%x", hashed)
 }
