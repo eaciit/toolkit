@@ -2,12 +2,15 @@ package toolkit
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 )
 
 type M map[string]interface{}
 type Ms []M
+
+var ErrorPathNotFound = errors.New("Path requested is not available")
 
 func (m M) Set(k string, v interface{}) M {
 	m[k] = v
@@ -102,6 +105,35 @@ func (m M) GetFloat32(k string) float32 {
 func (m M) Has(k string) bool {
 	_, has := m[k]
 	return has
+}
+
+func (m M) PathGet(path string) (interface{}, error) {
+	pathlist := strings.Split(path, ".")
+	var curobj interface{} = m
+	for _, nextpath := range pathlist {
+		switch curobj.(type) {
+		case M:
+			curM := curobj.(M)
+			var found bool
+			curobj, found = curM[nextpath]
+			if !found {
+				return nil, ErrorPathNotFound
+			}
+
+		case map[string]interface{}:
+			curM := curobj.(map[string]interface{})
+			var found bool
+			curobj, found = curM[nextpath]
+			if !found {
+				return nil, ErrorPathNotFound
+			}
+
+		default:
+			return nil, ErrorPathNotFound
+		}
+	}
+
+	return curobj, nil
 }
 
 func (m M) Keys() []string {
