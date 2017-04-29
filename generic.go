@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"time"
 )
 
 var gobs []string
@@ -298,4 +299,19 @@ func ExecFunc(fn interface{}, ins ...interface{}) (outs []reflect.Value, e error
 	}
 	outs = rvfn.Call(rvins)
 	return
+}
+
+func ExecuteBlockWithTimeout(callback func() interface{}, timeout time.Duration) (interface{}, bool) {
+	ch := make(chan interface{}, 1)
+
+	go func() {
+		ch <- callback()
+	}()
+
+	select {
+	case res := <-ch:
+		return res, true
+	case <-time.After(timeout * time.Second):
+		return nil, false
+	}
 }
