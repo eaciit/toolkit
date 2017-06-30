@@ -4,12 +4,13 @@ import (
 	"fmt"
 	//"io"
 	"errors"
-	"github.com/eaciit/cast"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/eaciit/cast"
 )
 
 type LogEngine struct {
@@ -96,6 +97,21 @@ func (l *LogEngine) Error(msg string) error {
 }
 
 func (l *LogEngine) Warning(msg string) error {
+	return l.AddLog(msg, "WARNING")
+}
+
+func (l *LogEngine) Infof(msg string, args ...interface{}) error {
+	msg = Sprintf(msg, args...)
+	return l.AddLog(msg, "INFO")
+}
+
+func (l *LogEngine) Errorf(msg string, args ...interface{}) error {
+	msg = Sprintf(msg, args...)
+	return l.AddLog(msg, "ERROR")
+}
+
+func (l *LogEngine) Warningf(msg string, args ...interface{}) error {
+	msg = Sprintf(msg, args...)
 	return l.AddLog(msg, "WARNING")
 }
 

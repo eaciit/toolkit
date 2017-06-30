@@ -9,5 +9,5 @@ func Error(txt string) error {
 }
 
 func Errorf(txt string, obj ...interface{}) error {
-	return fmt.Errorf(txt, obj)
+	return fmt.Errorf(txt, obj...)
 }
