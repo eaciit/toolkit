@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"time"
 )
 
 var gobs []string
@@ -69,7 +70,7 @@ func IsNilOrEmpty(x interface{}) bool {
 		return false
 	} else if k == reflect.Bool {
 		return false
-	} else if strings.HasPrefix(k.String(), "int") || strings.Contains(k.String(), "float") {
+	} else if strings.HasPrefix(k.String(), "int") || strings.Contains(k.String(), "uint") || strings.Contains(k.String(), "float") {
 		iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
 		if iszero {
 			return true
@@ -298,4 +299,19 @@ func ExecFunc(fn interface{}, ins ...interface{}) (outs []reflect.Value, e error
 	}
 	outs = rvfn.Call(rvins)
 	return
+}
+
+func ExecuteBlockWithTimeout(callback func() interface{}, timeout time.Duration) (interface{}, bool) {
+	ch := make(chan interface{}, 1)
+
+	go func() {
+		ch <- callback()
+	}()
+
+	select {
+	case res := <-ch:
+		return res, true
+	case <-time.After(timeout * time.Second):
+		return nil, false
+	}
 }
