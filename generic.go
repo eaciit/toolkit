@@ -53,9 +53,9 @@ func TypeName(o interface{}) string {
 }
 
 func IsNilOrEmpty(x interface{}) bool {
-	if x == nil {
-		return true
-	}
+	//if x == nil {
+	//	return true
+	//}
 	rv := reflect.Indirect(reflect.ValueOf(x))
 	k := rv.Kind()
 	if k == reflect.Slice {
@@ -81,7 +81,7 @@ func IsNilOrEmpty(x interface{}) bool {
 
 	invalid := !rv.IsValid()
 	if invalid {
-		return false
+		return true
 	}
 
 	return rv.IsNil()
