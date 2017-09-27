@@ -70,7 +70,7 @@ func IsNilOrEmpty(x interface{}) bool {
 		return false
 	} else if k == reflect.Bool {
 		return false
-	} else if strings.HasPrefix(k.String(), "int") || strings.Contains(k.String(), "float") {
+	} else if strings.HasPrefix(k.String(), "int") || strings.Contains(k.String(), "uint") || strings.Contains(k.String(), "float") {
 		iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
 		if iszero {
 			return true
