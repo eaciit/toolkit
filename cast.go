@@ -155,9 +155,10 @@ func ToInt(o interface{}, rounding string) int {
 				return 0
 			}
 		}
-	} else if k == reflect.Int || k == reflect.Int8 ||
-		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+	} else if k == reflect.Int || k == reflect.Int8 || k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
 		return int(v.Int())
+	} else if k == reflect.Uint || k == reflect.Uint8 || k == reflect.Uint16 || k == reflect.Uint32 || k == reflect.Uint64 {
+		return int(v.Uint())
 	} else if k == reflect.Float32 || k == reflect.Float64 {
 		f := ToFloat64(v.Float(), 0, rounding)
 		return int(int64(f))
