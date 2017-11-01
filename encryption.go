@@ -1,7 +1,10 @@
 package toolkit
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/md5"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -45,4 +48,56 @@ func FileChecksum(fileLocation string) string {
 
 	hashed := hash.Sum(nil)
 	return fmt.Sprintf("%x", hashed)
+}
+
+func EncryptAES(text, key string) (string, error) {
+	plaintext := []byte(text)
+	c, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		return "", err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", err
+	}
+
+	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
+	result := fmt.Sprintf("%x", ciphertext)
+	return result, nil
+}
+
+func DecryptAES(text, key string) (string, error) {
+	ciphertext, err := hex.DecodeString(text)
+	if err != nil {
+		return "", err
+	}
+	c, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		return "", err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return "", err
+	}
+
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+	res, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+
+	result := fmt.Sprintf("%s", res)
+	return result, nil
 }
