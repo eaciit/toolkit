@@ -215,6 +215,10 @@ func ToFloat64(o interface{}, decimalPoint int, rounding string) float64 {
 		return RoundingUp64(f, decimalPoint)
 	}
 
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		f = 0
+	}
+
 	return f
 }
 
