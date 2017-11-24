@@ -10,6 +10,8 @@ import (
 
 var gobs []string
 
+type G interface{}
+
 func RegisterGobObject(o interface{}) {
 	name := reflect.ValueOf(o).Type().Name()
 	if HasMember(gobs, name) {
@@ -259,6 +261,12 @@ func SliceSetItem(o interface{}, i int, d interface{}) error {
 }
 
 func Serde(o interface{}, dest interface{}, serdeType string) error {
+	vt1 := reflect.TypeOf(o)
+	vt2 := reflect.TypeOf(dest)
+	if vt1.Name() == vt2.Name() {
+		reflect.ValueOf(dest).Set(reflect.ValueOf(o))
+	}
+
 	bs, e := ToBytesWithError(o, serdeType)
 	if len(bs) == 0 {
 		return errors.New("toolkit.Serde: Serialization Fail " + e.Error())

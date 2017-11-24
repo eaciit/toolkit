@@ -3,6 +3,7 @@ package toolkit
 import (
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -11,7 +12,11 @@ type randomizer struct {
 	r *rand.Rand
 }
 
-var r *randomizer
+var (
+	randomizerInitialized uint32
+	r                     *randomizer
+	rmu                   = new(sync.Mutex)
+)
 
 func (r *randomizer) Intn(limit int) int {
 	defer r.Unlock()
@@ -20,6 +25,13 @@ func (r *randomizer) Intn(limit int) int {
 }
 
 func initRandomSource() {
+	if atomic.LoadUint32(&randomizerInitialized) == 1 {
+		return
+	}
+
+	rmu.Lock()
+	defer rmu.Unlock()
+
 	if r == nil {
 		src := rand.NewSource(time.Now().UnixNano())
 		r = new(randomizer)
