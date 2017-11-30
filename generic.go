@@ -263,8 +263,9 @@ func SliceSetItem(o interface{}, i int, d interface{}) error {
 func Serde(o interface{}, dest interface{}, serdeType string) error {
 	vt1 := reflect.TypeOf(o)
 	vt2 := reflect.TypeOf(dest)
-	if vt1.Name() == vt2.Name() {
-		reflect.ValueOf(dest).Set(reflect.ValueOf(o))
+	vt1kind := vt1.Kind()
+	if vt1.Name() == vt2.Name() && vt1kind != reflect.Map && vt1kind != reflect.Slice {
+		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(o).Elem())
 	}
 
 	bs, e := ToBytesWithError(o, serdeType)

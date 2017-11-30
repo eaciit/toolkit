@@ -1,10 +1,12 @@
-package toolkit
+package toolkittest
 
 import (
 	"fmt"
 	"sync"
 	"testing"
 	"time"
+
+	. "github.com/eaciit/toolkit"
 )
 
 func Test_Http(t *testing.T) {
