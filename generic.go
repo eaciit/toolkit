@@ -264,6 +264,9 @@ func Serde(o interface{}, dest interface{}, serdeType string) error {
 	vt1 := reflect.TypeOf(o)
 	vt2 := reflect.TypeOf(dest)
 	vt1kind := vt1.Kind()
+	if vt1kind == reflect.Ptr {
+		vt1kind = reflect.ValueOf(o).Elem().Type().Kind()
+	}
 	if vt1.Name() == vt2.Name() && vt1kind != reflect.Map && vt1kind != reflect.Slice {
 		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(o).Elem())
 	}

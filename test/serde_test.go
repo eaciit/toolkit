@@ -76,6 +76,21 @@ func TestSerdeMtoMPtr(t *testing.T) {
 	}
 }
 
+func TestMsPtrToSlice(t *testing.T) {
+	d1 := []toolkit.M{toolkit.M{}.Set("ID", "1000").Set("Name", "Name1"),
+		toolkit.M{}.Set("ID", "1001").Set("Name", "Name2")}
+	var d2 []Data
+
+	err := Serde(&d1, &d2, "")
+	if err != nil {
+		check(t, err, "failed to serde")
+	}
+
+	if d1[1].Get("Name") != d2[1].Name {
+		check(t, toolkit.Errorf("object is not same: %v\n%v", d1, d2), "")
+	}
+}
+
 func check(t *testing.T, err error, pre string) {
 	if err != nil {
 		if pre == "" {
