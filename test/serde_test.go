@@ -88,6 +88,8 @@ func TestMsPtrToSlice(t *testing.T) {
 
 	if d1[1].Get("Name") != d2[1].Name {
 		check(t, toolkit.Errorf("object is not same: %v\n%v", d1, d2), "")
+	} else {
+		toolkit.Printfn("d1=d2\n%v\n%v", d1, d2)
 	}
 }
 
