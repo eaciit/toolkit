@@ -58,35 +58,37 @@ func IsNilOrEmpty(x interface{}) bool {
 	//if x == nil {
 	//	return true
 	//}
-	rv := reflect.Indirect(reflect.ValueOf(x))
-	k := rv.Kind()
-	if k == reflect.Slice {
-		return false
-	} else if k == reflect.String {
-		if ToString(x) == "" {
-			return true
-		} else {
-			return false
+	v := reflect.Indirect(reflect.ValueOf(x))
+	switch v.Kind() {
+	case reflect.String:
+		return len(v.String()) == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	case reflect.Slice:
+		return v.Len() == 0
+	case reflect.Map:
+		return v.Len() == 0
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Struct:
+		vt := v.Type()
+		for i := v.NumField() - 1; i >= 0; i-- {
+			if vt.Field(i).PkgPath != "" {
+				continue // Private field
+			}
+			if !IsNilOrEmpty(v.Field(i)) {
+				return false
+			}
 		}
-	} else if k == reflect.Struct {
-		return false
-	} else if k == reflect.Bool {
-		return false
-	} else if strings.HasPrefix(k.String(), "int") || strings.Contains(k.String(), "uint") || strings.Contains(k.String(), "float") {
-		iszero := x == reflect.Zero(reflect.TypeOf(x)).Interface()
-		if iszero {
-			return true
-		} else {
-			return false
-		}
-	}
-
-	invalid := !rv.IsValid()
-	if invalid {
 		return true
 	}
-
-	return rv.IsNil()
+	return false
 }
 
 func IsNumber(o interface{}) bool {
