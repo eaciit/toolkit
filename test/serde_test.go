@@ -62,7 +62,7 @@ func TestSerdeMtoM(t *testing.T) {
 
 func TestSerdeMtoMPtr(t *testing.T) {
 	var m1, m2 M
-	m1 = toolkit.M{}.Set("id", 1000).Set("name", "name 2")
+	m1 = toolkit.M{}.Set("id", "1000").Set("name", "name 2")
 	err := Serde(&m1, &m2, "")
 	if err != nil {
 		check(t, err, "failed to serde")
