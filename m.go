@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,18 +34,21 @@ func (m M) Get(k string, d ...interface{}) interface{} {
 }
 
 func ToM(v interface{}) (M, error) {
-	bs, e := json.Marshal(v)
-	if e != nil {
-		return M{}, fmt.Errorf("Unable to cast to M : " + e.Error())
+	buffer := []byte{}
+	buff := bytes.NewBuffer(buffer)
+	encoder := json.NewEncoder(buff)
+	err := encoder.Encode(v)
+	if err != nil {
+		return nil, err
 	}
-
-	m := M{}
-	e = json.Unmarshal(bs, &m)
-	if e != nil {
-		return m, fmt.Errorf("Unable to uncast to M from bytes: " + e.Error())
+	decoder := json.NewDecoder(buff)
+	decoder.UseNumber()
+	res := M{}
+	err = decoder.Decode(&res)
+	if err != nil {
+		return nil, err
 	}
-
-	return m, nil
+	return res, nil
 }
 
 func (m M) ToBytes(encodertype string, others ...interface{}) []byte {
