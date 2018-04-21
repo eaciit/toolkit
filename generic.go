@@ -55,9 +55,10 @@ func TypeName(o interface{}) string {
 }
 
 func IsNilOrEmpty(x interface{}) bool {
-	//if x == nil {
-	//	return true
-	//}
+	if x == nil {
+		return true
+	}
+
 	v := reflect.Indirect(reflect.ValueOf(x))
 	switch v.Kind() {
 	case reflect.String:
