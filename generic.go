@@ -83,7 +83,7 @@ func IsNilOrEmpty(x interface{}) bool {
 			if vt.Field(i).PkgPath != "" {
 				continue // Private field
 			}
-			if !IsNilOrEmpty(v.Field(i)) {
+			if !IsNilOrEmpty(v.Field(i).Interface()) {
 				return false
 			}
 		}
