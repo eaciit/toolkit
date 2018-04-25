@@ -55,9 +55,10 @@ func TypeName(o interface{}) string {
 }
 
 func IsNilOrEmpty(x interface{}) bool {
-	//if x == nil {
-	//	return true
-	//}
+	if x == nil {
+		return true
+	}
+
 	v := reflect.Indirect(reflect.ValueOf(x))
 	switch v.Kind() {
 	case reflect.String:
@@ -82,7 +83,7 @@ func IsNilOrEmpty(x interface{}) bool {
 			if vt.Field(i).PkgPath != "" {
 				continue // Private field
 			}
-			if !IsNilOrEmpty(v.Field(i)) {
+			if !IsNilOrEmpty(v.Field(i).Interface()) {
 				return false
 			}
 		}
