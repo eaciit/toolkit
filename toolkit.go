@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"bytes"
 	//"bytes"
 	//"encoding/gob"
 	"encoding/json"
@@ -188,13 +189,18 @@ func JsonStringIndent(o interface{}, indentChar string) string {
 }
 
 func Unjson(b []byte, result interface{}) error {
-	e := json.Unmarshal(b, result)
+	buff := bytes.NewBuffer(b)
+	decoder := json.NewDecoder(buff)
+	decoder.UseNumber()
+	e := decoder.Decode(&result)
 	return e
 }
 
 func UnjsonFromString(s string, result interface{}) error {
-	b := []byte(s)
-	e := json.Unmarshal(b, result)
+	b := bytes.NewBufferString(s)
+	decoder := json.NewDecoder(b)
+	decoder.UseNumber()
+	e := decoder.Decode(&result)
 	return e
 }
 
