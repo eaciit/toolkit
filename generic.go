@@ -79,16 +79,28 @@ func IsNilOrEmpty(x interface{}) bool {
 		return !v.Bool()
 	case reflect.Struct:
 		vt := v.Type()
+
+		totalPublicProps := 0
+		totalPublicPropsNotEmpty := 0
+
 		for i := v.NumField() - 1; i >= 0; i-- {
 			if vt.Field(i).PkgPath != "" {
 				continue // Private field
 			}
+
+			totalPublicProps++
 			if !IsNilOrEmpty(v.Field(i).Interface()) {
-				return false
+				totalPublicPropsNotEmpty++
 			}
 		}
-		return true
+
+		// has few public properties, but all of them is empty.
+		// example: we store time.Time data in session/M, when we trying to get the data the returned value is always nil, because in previous commit, only if there is at least 1 property which is not empty, the value marked as not nil. but time.Time type doesn't have any public properties, this condition causing returned value always nil.
+		if totalPublicProps > 0 && totalPublicPropsNotEmpty == 0 {
+			return true
+		}
 	}
+
 	return false
 }
 
