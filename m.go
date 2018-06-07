@@ -33,6 +33,10 @@ func (m M) Get(k string, d ...interface{}) interface{} {
 	}
 }
 
+func (m M) GetRef(k string, d, out interface{}) {
+	out = m.Get(k, d)
+}
+
 func ToM(v interface{}) (M, error) {
 	buffer := []byte{}
 	buff := bytes.NewBuffer(buffer)
