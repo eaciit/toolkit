@@ -93,3 +93,19 @@ func TestGetRefNil(t *testing.T) {
 		t.Errorf("Expecting %v, got %v", d1.Value, d3.Value)
 	}
 }
+
+func TestGetRefNonPointer(t *testing.T) {
+	type model struct {
+		Key   string
+		Value float32
+	}
+	var d3 model
+
+	d1 := model{"M1", 20.53}
+	m := M{}.Set("D1", nil)
+
+	m.GetRef("D1", &d1, d3)
+	if d3.Value != d1.Value {
+		t.Errorf("Expecting %v, got %v", d1.Value, d3.Value)
+	}
+}

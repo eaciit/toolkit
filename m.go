@@ -34,10 +34,17 @@ func (m M) Get(k string, d ...interface{}) interface{} {
 	}
 }
 
-func (m M) GetRef(k string, d, out interface{}) {
+func (m M) GetRef(k string, d, out interface{}) error {
+	defer func() {
+		if r := recover(); r != nil {
+		}
+	}()
+
 	valget := reflect.Indirect(reflect.ValueOf(m.Get(k, d)))
 	valout := reflect.ValueOf(out)
 	valout.Elem().Set(valget)
+
+	return nil
 }
 
 func ToM(v interface{}) (M, error) {
