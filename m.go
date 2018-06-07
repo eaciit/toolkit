@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -34,7 +35,9 @@ func (m M) Get(k string, d ...interface{}) interface{} {
 }
 
 func (m M) GetRef(k string, d, out interface{}) {
-	out = m.Get(k, d)
+	valget := reflect.Indirect(reflect.ValueOf(m.Get(k, d)))
+	valout := reflect.ValueOf(out)
+	valout.Elem().Set(valget)
 }
 
 func ToM(v interface{}) (M, error) {
