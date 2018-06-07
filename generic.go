@@ -54,6 +54,20 @@ func TypeName(o interface{}) string {
 	*/
 }
 
+func IsNil(x interface{}) bool {
+	if x == nil {
+		return true
+	}
+
+	v := reflect.Indirect(reflect.ValueOf(x))
+	switch v.Kind() {
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+
+	return false
+}
+
 func IsNilOrEmpty(x interface{}) bool {
 	if x == nil {
 		return true
@@ -304,7 +318,7 @@ func Serde(o interface{}, dest interface{}, serdeType string) error {
 
 func Value2Interface(vi reflect.Value) interface{} {
 	vik := vi.Type().String()
-	if strings.Contains(vik, "string") {
+	if vik == "string" || vik == "String" {
 		return vi.String()
 	} else if (vik == "int" || vik == "int8" || vik == "int16" || vik == "int32" || strings.Contains(vik, "uint")) && !strings.Contains(vik, "interface") {
 		return int(vi.Int())
@@ -313,6 +327,7 @@ func Value2Interface(vi reflect.Value) interface{} {
 	} else if strings.Contains(vik, "bool") {
 		return vi.Bool()
 	} else {
+		//Printfn("data: %s", JsonString(vi.Interface()))
 		return vi.Interface()
 	}
 }
