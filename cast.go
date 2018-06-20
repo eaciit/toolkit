@@ -177,9 +177,9 @@ func ToFloat32(o interface{}, decimalPoint int, rounding string) float32 {
 		f = ToFloat64(v.String(), 0, rounding)
 	} else if k == reflect.Int || k == reflect.Int8 ||
 		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
-		f = ToFloat64(v.Int(), 0, rounding)
+		f = ToFloat64(v.Int(), decimalPoint, rounding)
 	} else if k == reflect.Float32 || k == reflect.Float64 {
-		f = ToFloat64(v.Float(), 0, rounding)
+		f = ToFloat64(v.Float(), decimalPoint, rounding)
 	}
 
 	return float32(f)
