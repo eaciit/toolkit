@@ -1,7 +1,7 @@
 package toolkit
 
 import (
-	"fmt"
+
 	//"io"
 	"errors"
 	"log"
@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/eaciit/cast"
 )
 
 type LogEngine struct {
@@ -19,9 +17,15 @@ type LogEngine struct {
 	Path            string
 	FileNamePattern string
 	UseDateFormat   string
-	logInfo         *log.Logger
-	logWarn         *log.Logger
-	logError        *log.Logger
+
+	logInfo  *log.Logger
+	logWarn  *log.Logger
+	logError *log.Logger
+
+	fileNames map[string]string
+	writers   map[string]*os.File
+	hooks     map[string][]func(string, string)
+
 	//logFile         *log.Logger
 	//logFileHandler  *os.File
 }
@@ -50,17 +54,21 @@ func (l *LogEngine) initLogger() error {
 		l.logInfo = log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
 		l.logWarn = log.New(os.Stdout, "WARNING ", log.Ldate|log.Ltime)
 	}
+
+	l.fileNames = map[string]string{}
+	l.writers = map[string]*os.File{}
+	l.hooks = map[string][]func(string, string){}
 	return nil
 }
 
 func (l *LogEngine) AddLog(msg string, logtype string) error {
 	var e error
-	logtype = strings.ToUpper(logtype) + " "
+	logtype = strings.ToUpper(logtype)
 
 	if l.LogToStdOut {
-		if logtype == "ERROR " {
+		if logtype == "ERROR" {
 			l.logError.Println(msg)
-		} else if logtype == "WARNING " {
+		} else if logtype == "WARNING" {
 			l.logWarn.Println(msg)
 		} else {
 			l.logInfo.Println(msg)
@@ -71,21 +79,56 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 	}
 
 	if l.LogToFile {
-		filename := l.FileNamePattern
-		if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "%s") {
-			filename = fmt.Sprintf(l.FileNamePattern, cast.Date2String(time.Now(), l.UseDateFormat))
-		}
-		filename = filepath.Join(l.Path, filename)
-		f, e := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-		if e != nil {
-			return errors.New("Log.AddLog Error: " + e.Error())
-		}
-		defer f.Close()
-		logFile := log.New(f, logtype, log.Ldate|log.Ltime)
-		logFile.Println(msg)
+		go func() {
+			filename := l.FileNamePattern
+			if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "$DATE") {
+				filename = strings.Replace(l.FileNamePattern, "$DATE", Date2String(time.Now(), l.UseDateFormat), -1)
+			}
+			if strings.Contains(filename, "$LOGTYPE") {
+				filename = strings.Replace(filename, "$LOGTYPE", logtype, -1)
+			}
+			filename = filepath.Join(l.Path, filename)
+			filenameSelected := l.fileNames[logtype]
+			if filename != filenameSelected {
+				w, exist := l.writers[logtype]
+				if exist {
+					w.Close()
+				}
+
+				f, e := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+				if e != nil {
+					return
+					//return errors.New("Log.AddLog Error: " + e.Error())
+				}
+				l.fileNames[logtype] = filename
+				l.writers[logtype] = f
+			}
+			logFile := log.New(l.writers[logtype], logtype+" ", log.Ldate|log.Ltime)
+			logFile.Println(msg)
+		}()
 	}
 
+	//--- run hook
+	go func() {
+		hooks := l.hooks[logtype]
+		for _, hook := range hooks {
+			hook(logtype, msg)
+		}
+	}()
+
 	return nil
+}
+
+func (l *LogEngine) AddHook(fn func(string, string), logtypes ...string) {
+	if len(logtypes) == 0 {
+		logtypes = []string{"ERROR", "INFO", "WARNING"}
+	}
+
+	for _, logtype := range logtypes {
+		hooks := l.hooks[logtype]
+		hooks = append(hooks, fn)
+		l.hooks[logtype] = hooks
+	}
 }
 
 func (l *LogEngine) Info(msg string) error {
@@ -117,4 +160,7 @@ func (l *LogEngine) Warningf(msg string, args ...interface{}) error {
 
 func (l *LogEngine) Close() {
 	//l.logFileHandler.Close()
+	for _, w := range l.writers {
+		w.Close()
+	}
 }

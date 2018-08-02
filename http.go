@@ -115,7 +115,9 @@ func httpcall(req *http.Request, config M) (*http.Response, error) {
 	}
 	if errCall == nil {
 		if expectedStatus := config.Get("expectedstatus", 0).(int); expectedStatus != 0 && resp.StatusCode != expectedStatus {
-			return nil, fmt.Errorf("Code error: " + resp.Status)
+			defer resp.Body.Close()
+			bs, _ := ioutil.ReadAll(resp.Body)
+			return nil, fmt.Errorf("Code error: %s : %v", resp.Status, string(bs))
 		}
 	}
 	return resp, errCall
