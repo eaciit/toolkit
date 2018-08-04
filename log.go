@@ -185,4 +185,8 @@ func (l *LogEngine) Close() {
 	for _, w := range l.writers {
 		w.Close()
 	}
+
+	if l.chanLogItem != nil {
+		close(l.chanLogItem)
+	}
 }
