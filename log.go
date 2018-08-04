@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"sync"
 
 	//"io"
 	"errors"
@@ -11,7 +12,14 @@ import (
 	"time"
 )
 
+type logItem struct {
+	LogType string
+	Msg     string
+}
+
 type LogEngine struct {
+	sync.RWMutex
+
 	LogToStdOut     bool
 	LogToFile       bool
 	Path            string
@@ -22,9 +30,10 @@ type LogEngine struct {
 	logWarn  *log.Logger
 	logError *log.Logger
 
-	fileNames map[string]string
-	writers   map[string]*os.File
-	hooks     map[string][]func(string, string)
+	chanLogItem chan logItem
+	fileNames   map[string]string
+	writers     map[string]*os.File
+	hooks       map[string][]func(string, string)
 
 	//logFile         *log.Logger
 	//logFileHandler  *os.File
@@ -44,6 +53,17 @@ func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, use
 	if e != nil {
 		return nil, e
 	}
+
+	if l.LogToFile {
+		l.chanLogItem = make(chan logItem)
+
+		go func() {
+			for li := range l.chanLogItem {
+				l.writeLogToFile(li.Msg, li.LogType)
+			}
+		}()
+	}
+
 	return l, nil
 }
 
@@ -79,33 +99,7 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 	}
 
 	if l.LogToFile {
-		go func() {
-			filename := l.FileNamePattern
-			if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "$DATE") {
-				filename = strings.Replace(l.FileNamePattern, "$DATE", Date2String(time.Now(), l.UseDateFormat), -1)
-			}
-			if strings.Contains(filename, "$LOGTYPE") {
-				filename = strings.Replace(filename, "$LOGTYPE", logtype, -1)
-			}
-			filename = filepath.Join(l.Path, filename)
-			filenameSelected := l.fileNames[logtype]
-			if filename != filenameSelected {
-				w, exist := l.writers[logtype]
-				if exist {
-					w.Close()
-				}
-
-				f, e := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-				if e != nil {
-					return
-					//return errors.New("Log.AddLog Error: " + e.Error())
-				}
-				l.fileNames[logtype] = filename
-				l.writers[logtype] = f
-			}
-			logFile := log.New(l.writers[logtype], logtype+" ", log.Ldate|log.Ltime)
-			logFile.Println(msg)
-		}()
+		l.chanLogItem <- logItem{logtype, msg}
 	}
 
 	//--- run hook
@@ -117,6 +111,34 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 	}()
 
 	return nil
+}
+
+func (l *LogEngine) writeLogToFile(msg, logtype string) {
+	filename := l.FileNamePattern
+	if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "$DATE") {
+		filename = strings.Replace(l.FileNamePattern, "$DATE", Date2String(time.Now(), l.UseDateFormat), -1)
+	}
+	if strings.Contains(filename, "$LOGTYPE") {
+		filename = strings.Replace(filename, "$LOGTYPE", logtype, -1)
+	}
+	filename = filepath.Join(l.Path, filename)
+	filenameSelected := l.fileNames[logtype]
+	if filename != filenameSelected {
+		w, exist := l.writers[logtype]
+		if exist {
+			w.Close()
+		}
+
+		f, e := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		if e != nil {
+			return
+			//return errors.New("Log.AddLog Error: " + e.Error())
+		}
+		l.fileNames[logtype] = filename
+		l.writers[logtype] = f
+	}
+	logFile := log.New(l.writers[logtype], logtype+" ", log.Ldate|log.Ltime)
+	logFile.Println(msg)
 }
 
 func (l *LogEngine) AddHook(fn func(string, string), logtypes ...string) {
