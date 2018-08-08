@@ -137,7 +137,7 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		}
 		vv2o := vv2.Interface().(time.Time)
 		if op == "$eq" {
-			return vv1o.Sub(vv2o).Seconds() == 0
+			return vv1o.Sub(vv2o).Nanoseconds() == 0
 		} else if op == "$ne" {
 			return vv1o != vv2o
 		} else if op == "$lt" {
