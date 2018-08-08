@@ -96,6 +96,14 @@ func TestHasMemberUsingSliseOfInterfaceWithVariousElements(t *testing.T) {
 	// =====> false
 }
 
+func TestHasMemberUsingNonSliceData(t *testing.T) {
+	isExists := HasMember("test", "hello")
+	assert.False(t, isExists)
+
+	// t.Logf("%#v \n", isExists)
+	// =====> false
+}
+
 func TestMemberIndexUsingSliseOfInterface(t *testing.T) {
 	data := []interface{}{"noval", "male", 12, true, []string{"ainur", "panjang"}}
 
@@ -172,6 +180,15 @@ func TestMemberIndexUsingSliseOfInterfaceWithVariousElements(t *testing.T) {
 	// =====> is exists: false, index: -1
 }
 
+func TestMemberIndexUsingNonSliceData(t *testing.T) {
+	isExists, index := MemberIndex("test", "hello")
+	assert.False(t, isExists)
+	assert.Equal(t, -1, index)
+
+	// t.Logf("is exists: %t, index: %d \n", isExists, index)
+	// =====> is exists: true, index: -1
+}
+
 func TestToInterfaceArrayUsingSliceOfStringData(t *testing.T) {
 	data := []string{"a", "b", "c", "d", "e"}
 	res := ToInterfaceArray(data)
@@ -215,6 +232,14 @@ func TestToInterfaceArrayUsingSliceOfMapData(t *testing.T) {
 	//     map[string]int{"ainur": 14},
 	//     map[string]int{"bagus": 15},
 	// }
+}
+
+func TestToInterfaceArrayUsingNonSliceData(t *testing.T) {
+	res := ToInterfaceArray("test")
+	assert.Equal(t, make([]interface{}, 0), res)
+
+	// t.Logf("%#v \n", res)
+	// =====> []interface{}{}
 }
 
 func TestCompareString(t *testing.T) {
@@ -334,11 +359,13 @@ func TestCompareBool(t *testing.T) {
 }
 
 func TestCompareTime(t *testing.T) {
-	time1, err := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
-	assert.NoError(t, err)
-	time2, err := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
-	assert.NoError(t, err)
+	var time1, time2 time.Time
+	var err error
 
+	time1, err = time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+	assert.NoError(t, err)
+	time2, err = time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+	assert.NoError(t, err)
 	res1 := Compare(time1, time2, "$eq")
 	assert.True(t, res1)
 	// t.Logf("%#v \n", res1)
@@ -348,12 +375,15 @@ func TestCompareTime(t *testing.T) {
 	assert.NoError(t, err)
 	time2, err = time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
 	assert.NoError(t, err)
-
 	res2 := Compare(time1, time2, "$eq")
 	assert.False(t, res2)
 	// t.Logf("%#v \n", res2)
 	// =====> false
 
+	time1, err = time.Parse(time.RFC3339, "2012-11-01T22:08:42+00:00")
+	assert.NoError(t, err)
+	time2, err = time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+	assert.NoError(t, err)
 	res3 := Compare(time1, time2, "$gt") && Compare(time1, time2, "$gte")
 	assert.True(t, res3)
 	// t.Logf("%#v \n", res3)
@@ -363,9 +393,31 @@ func TestCompareTime(t *testing.T) {
 	assert.NoError(t, err)
 	time2, err = time.Parse(time.RFC3339, "2012-11-01T22:08:43+00:00")
 	assert.NoError(t, err)
-
 	res4 := Compare(time1, time2, "$lt") && Compare(time1, time2, "$lte")
 	assert.True(t, res4)
 	// t.Logf("%#v \n", res4)
 	// =====> true
+
+	time1, err = time.Parse(time.RFC3339, "2012-11-01T22:08:42+00:00")
+	assert.NoError(t, err)
+	time2, err = time.Parse(time.RFC3339, "2012-11-01T22:08:43+00:00")
+	assert.NoError(t, err)
+	res5 := Compare(time1, time2, "$ne")
+	assert.True(t, res5)
+	// t.Logf("%#v \n", res5)
+	// =====> true
+
+	time2, err = time.Parse(time.RFC3339, "2012-11-01T22:08:42+00:00")
+	assert.NoError(t, err)
+	res6 := Compare("hello", time2, "$eq")
+	assert.False(t, res6)
+	// t.Logf("%#v \n", res6)
+	// =====> false
+}
+
+func TestCompareUsingInvalidArguments(t *testing.T) {
+	res := Compare("hello", "test", "lalalala")
+	assert.False(t, res)
+	// t.Logf("%#v \n", res)
+	// =====> false
 }

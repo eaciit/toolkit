@@ -44,6 +44,7 @@ func HasMember(g interface{}, find interface{}) bool {
 func MemberIndex(g interface{}, find interface{}) (found bool, in int) {
 	found = false
 	if IsSlice(g) == false {
+		in = -1
 		return
 	}
 
