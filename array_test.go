@@ -308,7 +308,7 @@ func TestCompareNumeric(t *testing.T) {
 	res12 := Compare(12, interface{}("noval"), "$eq")
 	assert.False(t, res12)
 	// t.Logf("%#v \n", res12)
-	// =====> true
+	// =====> false
 }
 
 func TestCompareBool(t *testing.T) {
@@ -320,12 +320,12 @@ func TestCompareBool(t *testing.T) {
 	res2 := Compare(true, true, "$ne")
 	assert.False(t, res2)
 	// t.Logf("%#v \n", res2)
-	// =====> true
+	// =====> false
 
 	res3 := Compare(true, false, "$eq")
 	assert.False(t, res3)
 	// t.Logf("%#v \n", res3)
-	// =====> true
+	// =====> false
 
 	res4 := Compare(true, false, "$ne")
 	assert.True(t, res4)
@@ -352,7 +352,7 @@ func TestCompareTime(t *testing.T) {
 	res2 := Compare(time1, time2, "$eq")
 	assert.False(t, res2)
 	// t.Logf("%#v \n", res2)
-	// =====> true
+	// =====> false
 
 	res3 := Compare(time1, time2, "$gt") && Compare(time1, time2, "$gte")
 	assert.True(t, res3)
