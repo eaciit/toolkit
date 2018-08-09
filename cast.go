@@ -36,11 +36,16 @@ func ToString(o interface{}) string {
 		} else {
 			return Sprintf("%s", o)
 		}
-	} else if k == reflect.Int || k == reflect.Int8 ||
-		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+	} else if k == reflect.Int || k == reflect.Int8 || k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+		return fmt.Sprintf("%d", o)
+	} else if k == reflect.Uint || k == reflect.Uint8 || k == reflect.Uint16 || k == reflect.Uint32 || k == reflect.Uint64 {
 		return fmt.Sprintf("%d", o)
 	} else if k == reflect.Float32 || k == reflect.Float64 {
 		return fmt.Sprintf("%f", o)
+	} else if k == reflect.Bool {
+		return fmt.Sprintf("%t", o)
+	} else if k == reflect.Array || k == reflect.Slice || k == reflect.Map || k == reflect.Struct {
+		return fmt.Sprintf("%v", o)
 	} else {
 		return ""
 	}
