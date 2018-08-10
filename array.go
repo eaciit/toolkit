@@ -44,6 +44,7 @@ func HasMember(g interface{}, find interface{}) bool {
 func MemberIndex(g interface{}, find interface{}) (found bool, in int) {
 	found = false
 	if IsSlice(g) == false {
+		in = -1
 		return
 	}
 
@@ -56,6 +57,8 @@ func MemberIndex(g interface{}, find interface{}) (found bool, in int) {
 			return
 		}
 	}
+
+	in = -1
 	return
 }
 
@@ -80,9 +83,9 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 	vv2 := reflect.Indirect(reflect.ValueOf(v2))
 	//Println("Compare: ", op, v1, v2, vv1.Type().String(), vv2.Type().String())
 	/*
-		if vv1.Type().String() != vv2.Type().String() {
-			return false
-		}
+	   if vv1.Type().String() != vv2.Type().String() {
+	       return false
+	   }
 	*/
 
 	k := strings.ToLower(vv1.Kind().String())
@@ -135,7 +138,7 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		}
 		vv2o := vv2.Interface().(time.Time)
 		if op == "$eq" {
-			return vv1o == vv2o
+			return vv1o.Sub(vv2o).Nanoseconds() == 0
 		} else if op == "$ne" {
 			return vv1o != vv2o
 		} else if op == "$lt" {
@@ -150,11 +153,16 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 
 	} else if strings.Contains(t, "bool") {
 		vv1o := vv1.Bool()
-		vv2o := vv2.Bool()
-		if op == "$eq" {
-			return vv1o == vv2o
-		} else if op == "$ne" {
-			return vv1o != vv2o
+
+		if vv2.Kind() == reflect.Bool {
+			vv2o := vv2.Bool()
+			if op == "$eq" {
+				return vv1o == vv2o
+			} else if op == "$ne" {
+				return vv1o != vv2o
+			}
+		} else {
+			return false
 		}
 	} else {
 		//--- will be string
