@@ -174,7 +174,14 @@ func TestRoundingUp64(t *testing.T) {
 }
 
 func TestToDate(t *testing.T) {
-	t.Skip("in progress")
+	time1, err := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	time2 := ToDate(time1.UnixNano(), "")
+
+	assert.Equal(t, time1.Format("2012-11-01 22:08:41"), time2.Format("2012-11-01 22:08:41"))
 }
 
 func TestToDuration(t *testing.T) {
