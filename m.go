@@ -1,12 +1,12 @@
 package toolkit
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type M map[string]interface{}
@@ -46,22 +46,84 @@ func (m M) GetRef(k string, d, out interface{}) {
 	valout.Elem().Set(valget)
 }
 
-func ToM(v interface{}) (M, error) {
-	buffer := []byte{}
-	buff := bytes.NewBuffer(buffer)
-	encoder := json.NewEncoder(buff)
-	err := encoder.Encode(v)
-	if err != nil {
-		return nil, err
-	}
-	decoder := json.NewDecoder(buff)
-	decoder.UseNumber()
+func ToM(data interface{}) (M, error) {
+	/*
+		buffer := []byte{}
+		buff := bytes.NewBuffer(buffer)
+		encoder := json.NewEncoder(buff)
+		err := encoder.Encode(v)
+		if err != nil {
+			return nil, err
+		}
+		decoder := json.NewDecoder(buff)
+		decoder.UseNumber()
+		res := M{}
+		err = decoder.Decode(&res)
+		if err != nil {
+			return nil, err
+		}
+		return res, nil
+	*/
+	rv := reflect.Indirect(reflect.ValueOf(data))
+	// Create emapty map as a result
 	res := M{}
-	err = decoder.Decode(&res)
-	if err != nil {
-		return nil, err
+
+	// Because of the difference behaviour of Struct type and Map type, we need to check the data element type
+	if rv.Kind() == reflect.Struct {
+		// Iterate through all the available field
+		for i := 0; i < rv.NumField(); i++ {
+			// Get the field type
+			f := rv.Type().Field(i)
+
+			// If the type is struct but not time.Time or is a map
+			if (f.Type.Kind() == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || f.Type.Kind() == reflect.Map {
+				// Then we need to call this function again to fetch the sub value
+				subRes, err := ToM(rv.Field(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+
+				res[f.Name] = subRes
+
+				// Skip the rest
+				continue
+			}
+
+			// If the type is time.Time or is not struct and map then put it in the result directly
+			res[f.Name] = rv.Field(i).Interface()
+		}
+
+		// Return the result
+		return res, nil
+	} else if rv.Kind() == reflect.Map {
+		// If the data element is kind of map
+		// Iterate through all avilable keys
+		for _, key := range rv.MapKeys() {
+			// Get the map value type of the specified key
+			t := rv.MapIndex(key).Elem().Type()
+			// If the type is struct but not time.Time or is a map
+			if (t.Kind() == reflect.Struct && t != reflect.TypeOf(time.Time{})) || t.Kind() == reflect.Map {
+				// Then we need to call this function again to fetch the sub value
+				subRes, err := ToM(rv.MapIndex(key).Interface())
+				if err != nil {
+					return nil, err
+				}
+				res[key.String()] = subRes
+
+				// Skip the rest
+				continue
+			}
+
+			// If the type is time.Time or is not struct and map then put it in the result directly
+			res[key.String()] = rv.MapIndex(key).Interface()
+		}
+
+		// Return the result
+		return res, nil
 	}
-	return res, nil
+
+	// If the data element is not map or struct then return error
+	return nil, Errorf("Expecting struct or map object but got", rv.Kind())
 }
 
 func (m M) ToBytes(encodertype string, others ...interface{}) []byte {
