@@ -173,15 +173,45 @@ func TestRoundingUp64(t *testing.T) {
 	t.Skip("covered by TestToFloat64()")
 }
 
-func TestToDate(t *testing.T) {
+func TestToDateUsingUnixData(t *testing.T) {
 	time1, err := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	time2 := ToDate(time1.UnixNano(), "")
+	time2 := ToDate(time1.Unix(), "")
+	assert.Equal(t,
+		time1.UTC().Format("2006-01-02 15:04:05"),
+		time2.UTC().Format("2006-01-02 15:04:05"),
+	)
+}
 
-	assert.Equal(t, time1.Format("2012-11-01 22:08:41"), time2.Format("2012-11-01 22:08:41"))
+func TestToDateUsingDateString(t *testing.T) {
+	dateString := "2012-11-01T22:08:41+00:00"
+	time1, err := time.Parse(time.RFC3339, dateString)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	time2 := ToDate(dateString, time.RFC3339)
+	assert.Equal(t,
+		time1.UTC().Format("2006-01-02 15:04:05"),
+		time2.UTC().Format("2006-01-02 15:04:05"),
+	)
+}
+
+func TestToDateUsingTime(t *testing.T) {
+	dateString := "2012-11-01T22:08:41+00:00"
+	time1, err := time.Parse(time.RFC3339, dateString)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	time2 := ToDate(time1, time.RFC3339)
+	assert.Equal(t,
+		time1.UTC().Format("2006-01-02 15:04:05"),
+		time2.UTC().Format("2006-01-02 15:04:05"),
+	)
 }
 
 func TestToDuration(t *testing.T) {
