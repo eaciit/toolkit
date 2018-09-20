@@ -1,7 +1,6 @@
 package toolkit
 
 import (
-	"sync"
 
 	//"io"
 	"errors"
@@ -18,8 +17,6 @@ type logItem struct {
 }
 
 type LogEngine struct {
-	sync.RWMutex
-
 	LogToStdOut     bool
 	LogToFile       bool
 	Path            string
