@@ -123,7 +123,7 @@ func ToM(data interface{}) (M, error) {
 	}
 
 	// If the data element is not map or struct then return error
-	return nil, Errorf("Expecting struct or map object but got", rv.Kind())
+	return nil, Errorf("Expecting struct or map object but got %s", rv.Kind())
 }
 
 func (m M) ToBytes(encodertype string, others ...interface{}) []byte {
