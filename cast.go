@@ -25,22 +25,31 @@ func Kind(o interface{}) reflect.Kind {
 }
 
 func ToString(o interface{}) string {
+	if IsPointer(o) {
+		return ""
+	}
+
 	v := Value(o)
 	k := v.Kind()
-	t := v.Type()
+
 	if k == reflect.Interface && v.IsNil() {
 		return ""
 	} else if k == reflect.String {
-		if t.Name() == "string" {
-			return o.(string)
-		} else {
-			return Sprintf("%s", o)
+		if val, ok := o.(string); ok {
+			return val
 		}
-	} else if k == reflect.Int || k == reflect.Int8 ||
-		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+
+		return Sprintf("%s", o)
+	} else if k == reflect.Int || k == reflect.Int8 || k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+		return fmt.Sprintf("%d", o)
+	} else if k == reflect.Uint || k == reflect.Uint8 || k == reflect.Uint16 || k == reflect.Uint32 || k == reflect.Uint64 {
 		return fmt.Sprintf("%d", o)
 	} else if k == reflect.Float32 || k == reflect.Float64 {
 		return fmt.Sprintf("%f", o)
+	} else if k == reflect.Bool {
+		return fmt.Sprintf("%t", o)
+	} else if k == reflect.Array || k == reflect.Slice || k == reflect.Map || k == reflect.Struct {
+		return fmt.Sprintf("%v", o)
 	} else {
 		return ""
 	}
@@ -139,6 +148,10 @@ func String2Date(dateString string, dateFormat string) time.Time {
 }
 
 func ToInt(o interface{}, rounding string) int {
+	if IsPointer(o) {
+		return 0
+	}
+
 	var ret int
 	k := Kind(o)
 	v := Value(o)
@@ -168,6 +181,10 @@ func ToInt(o interface{}, rounding string) int {
 }
 
 func ToFloat32(o interface{}, decimalPoint int, rounding string) float32 {
+	if IsPointer(o) {
+		return float32(0)
+	}
+
 	var f float64
 
 	k := Kind(o)
@@ -175,33 +192,41 @@ func ToFloat32(o interface{}, decimalPoint int, rounding string) float32 {
 
 	if k == reflect.String {
 		f = ToFloat64(v.String(), 0, rounding)
-	} else if k == reflect.Int || k == reflect.Int8 ||
-		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+	} else if k == reflect.Int || k == reflect.Int8 || k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
 		f = ToFloat64(v.Int(), decimalPoint, rounding)
+	} else if k == reflect.Uint || k == reflect.Uint8 || k == reflect.Uint16 || k == reflect.Uint32 || k == reflect.Uint64 {
+		f = ToFloat64(v.Uint(), decimalPoint, rounding)
 	} else if k == reflect.Float32 || k == reflect.Float64 {
 		f = ToFloat64(v.Float(), decimalPoint, rounding)
+	}
+
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		f = 0
 	}
 
 	return float32(f)
 }
 
 func ToFloat64(o interface{}, decimalPoint int, rounding string) float64 {
+	if IsPointer(o) {
+		return float64(0)
+	}
+
 	var f float64
 	var e error
 
 	k := Kind(o)
 	v := Value(o)
 
-	//Println("ToFloat Value: ", k.String())
 	if k == reflect.String {
 		f, e = strconv.ParseFloat(v.String(), 64)
 		if e != nil {
-			//Printf("Unable to convert to float %s\n", v.String())
 			return 0
 		}
-	} else if k == reflect.Int || k == reflect.Int8 ||
-		k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
+	} else if k == reflect.Int || k == reflect.Int8 || k == reflect.Int16 || k == reflect.Int32 || k == reflect.Int64 {
 		f = float64(v.Int())
+	} else if k == reflect.Uint || k == reflect.Uint8 || k == reflect.Uint16 || k == reflect.Uint32 || k == reflect.Uint64 {
+		f = float64(v.Uint())
 	} else if k == reflect.Float32 || k == reflect.Float64 {
 		f = float64(v.Float())
 	}
@@ -268,5 +293,5 @@ func ToDate(o interface{}, formatDate string) time.Time {
 }
 
 func ToDuration(o interface{}) time.Duration {
-	return (1 * time.Second)
+	return time.Duration(ToInt(o, RoundingAuto)) * time.Second
 }
