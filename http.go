@@ -5,6 +5,7 @@ Http related
 */
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -96,6 +97,9 @@ func httpcall(req *http.Request, config M) (*http.Response, error) {
 			req.Header.Add(k, v.(string))
 		}
 	}
+
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client.Transport = tr
 
 	var resp *http.Response
 	var errCall error
