@@ -178,7 +178,7 @@ func (m *M) Unset(k string) {
 
 func (m M) GetFloat32(k string) float32 {
 	i := m.Get(k, 0)
-	return ToFloat32(i, 4, RoundingAuto)
+	return ToFloat32(i, 6, RoundingAuto)
 }
 
 func (m M) Has(k string) bool {
