@@ -78,43 +78,23 @@ func ToInterfaceArray(o interface{}) []interface{} {
 }
 
 func Compare(v1 interface{}, v2 interface{}, op string) bool {
+	if !strings.HasPrefix(op, "$") {
+		op = "$" + op
+	}
 
 	vv1 := reflect.Indirect(reflect.ValueOf(v1))
 	vv2 := reflect.Indirect(reflect.ValueOf(v2))
-	//Println("Compare: ", op, v1, v2, vv1.Type().String(), vv2.Type().String())
-	/*
-	   if vv1.Type().String() != vv2.Type().String() {
-	       return false
-	   }
-	*/
 
-	k := strings.ToLower(vv1.Kind().String())
-	t := strings.ToLower(vv1.Type().String())
+	t1 := strings.ToLower(TypeName(v1))
+	t2 := strings.ToLower(TypeName(v2))
 
-	k2 := strings.ToLower(vv2.Kind().String())
-	kv2 := strings.ToLower(TypeName(v2))
-
-	if strings.Contains(k, "int") || strings.Contains(k, "float") {
+	if strings.Contains(t1, "int") || strings.Contains(t1, "float") || strings.Contains(t1, "number") {
 		//--- is a number
 		// lets convert all to float64 for simplicity
 		var vv1o, vv2o float64
+		vv1o = ToFloat64(v1, 10, RoundingAuto)
+		vv2o = ToFloat64(v2, 10, RoundingAuto)
 
-		if strings.Contains(k, "int") {
-			vv1o = float64(vv1.Int())
-		} else {
-			vv1o = vv1.Float()
-		}
-
-		if strings.Contains(k2, "int") {
-			vv2o = float64(vv2.Int())
-		} else if strings.Contains(k2, "float") {
-			vv2o = vv2.Float()
-		} else {
-			vv2o = ToFloat64(vv2, 2, RoundingAuto)
-		}
-
-		//vv1o = ToFloat64(vv1)
-		//vv2o = ToFloat64(vv2)
 		if op == "$eq" {
 			return vv1o == vv2o
 		} else if op == "$ne" {
@@ -128,10 +108,10 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		} else if op == "$gte" {
 			return vv1o >= vv2o
 		}
-	} else if strings.Contains(t, "time.time") || strings.Contains(kv2, "time.time") {
+	} else if strings.Contains(t1, "time.time") || strings.Contains(t2, "time.time") {
 		//--- is a time.Time
 		vv1o := time.Now()
-		if !strings.Contains(t, "time.time") {
+		if !strings.Contains(t1, "time.time") {
 			vv1o, _ = time.Parse(time.RFC3339, v1.(string))
 		} else {
 			vv1o = vv1.Interface().(time.Time)
@@ -151,7 +131,7 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 			return vv1o == vv2o || vv1o.After(vv2o)
 		}
 
-	} else if strings.Contains(t, "bool") {
+	} else if strings.Contains(t1, "bool") {
 		vv1o := vv1.Bool()
 
 		if vv2.Kind() == reflect.Bool {
@@ -173,13 +153,13 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 		} else if op == "$ne" {
 			return vv1o != vv2o
 		} else if op == "$lt" {
-			return vv1o < vv2o
+			return strings.Compare(vv1o, vv2o) < 0
 		} else if op == "$lte" {
-			return vv1o <= vv2o
+			return strings.Compare(vv1o, vv2o) <= 0
 		} else if op == "$gt" {
-			return vv1o > vv2o
+			return strings.Compare(vv1o, vv2o) > 0
 		} else if op == "$gte" {
-			return vv1o >= vv2o
+			return strings.Compare(vv1o, vv2o) >= 0
 		}
 	}
 
