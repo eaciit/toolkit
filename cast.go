@@ -194,7 +194,7 @@ func ToFloat32(o interface{}, decimalPoint int, rounding string) float32 {
 		f = ToFloat64(v.Int(), decimalPoint, rounding)
 	} else if strings.HasPrefix(t, "uint") {
 		f = ToFloat64(v.Uint(), decimalPoint, rounding)
-	} else if strings.HasPrefix(t, "float") || strings.Contains(t, "number") {
+	} else if strings.HasPrefix(t, "float") {
 		f = ToFloat64(v.Float(), decimalPoint, rounding)
 	} else {
 		f = ToFloat64(v.String(), decimalPoint, rounding)
@@ -208,7 +208,7 @@ func ToFloat32(o interface{}, decimalPoint int, rounding string) float32 {
 }
 
 func ToFloat64(o interface{}, decimalPoint int, rounding string) float64 {
-	fmt.Printf("\ndec: %v\n", decimalPoint)
+	//fmt.Printf("\ndec: %v\n", decimalPoint)
 	if IsPointer(o) {
 		return float64(0)
 	}
@@ -223,7 +223,7 @@ func ToFloat64(o interface{}, decimalPoint int, rounding string) float64 {
 		f = float64(v.Int())
 	} else if strings.HasPrefix(t, "uint") {
 		f = float64(v.Uint())
-	} else if strings.HasPrefix(t, "float") || strings.Contains(t, "number") {
+	} else if strings.HasPrefix(t, "float") {
 		f = float64(v.Float())
 	} else {
 		f, e = strconv.ParseFloat(v.String(), 64)
@@ -232,7 +232,7 @@ func ToFloat64(o interface{}, decimalPoint int, rounding string) float64 {
 		}
 	}
 
-	fmt.Printf("\ndec: %v\n", decimalPoint)
+	//fmt.Printf("\ndec: %v\n", decimalPoint)
 	switch rounding {
 	case RoundingAuto:
 		return RoundingAuto64(f, decimalPoint)
