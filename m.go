@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -155,6 +156,14 @@ func (m *M) Cast(k string, d interface{}) error {
 	}
 	e = json.Unmarshal(b, d)
 	return e
+}
+
+func (m M) GetBytes(k string) []byte {
+	bs, err := base64.StdEncoding.DecodeString(m.GetString(k))
+	if err != nil {
+		return []byte{}
+	}
+	return bs
 }
 
 func (m M) GetFloat64(k string) float64 {
