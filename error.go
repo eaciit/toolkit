@@ -30,6 +30,13 @@ func StackTrace(filters ...string) string {
 					}
 				}
 			}
+		} else {
+			for _, filter := range filters {
+				if strings.Contains(trace, filter) {
+					outs = append(outs, trace)
+					break
+				}
+			}
 		}
 	}
 	return strings.Join(outs, "\n")
