@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -157,6 +158,14 @@ func (m *M) Cast(k string, d interface{}) error {
 	return e
 }
 
+func (m M) GetBytes(k string) []byte {
+	bs, err := base64.StdEncoding.DecodeString(m.GetString(k))
+	if err != nil {
+		return []byte{}
+	}
+	return bs
+}
+
 func (m M) GetFloat64(k string) float64 {
 	i := m.Get(k, 0)
 	return ToFloat64(i, 6, RoundingAuto)
@@ -178,7 +187,7 @@ func (m *M) Unset(k string) {
 
 func (m M) GetFloat32(k string) float32 {
 	i := m.Get(k, 0)
-	return ToFloat32(i, 4, RoundingAuto)
+	return ToFloat32(i, 6, RoundingAuto)
 }
 
 func (m M) Has(k string) bool {
