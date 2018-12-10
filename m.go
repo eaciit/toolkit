@@ -100,19 +100,23 @@ func ToM(data interface{}) (M, error) {
 		// If the data element is kind of map
 		// Iterate through all avilable keys
 		for _, key := range rv.MapKeys() {
-			// Get the map value type of the specified key
-			t := rv.MapIndex(key).Elem().Type()
-			// If the type is struct but not time.Time or is a map
-			if (t.Kind() == reflect.Struct && t != reflect.TypeOf(time.Time{})) || t.Kind() == reflect.Map {
-				// Then we need to call this function again to fetch the sub value
-				subRes, err := ToM(rv.MapIndex(key).Interface())
-				if err != nil {
-					return nil, err
-				}
-				res[key.String()] = subRes
 
-				// Skip the rest
-				continue
+			// Get the map value type of the specified key
+			if elem := rv.MapIndex(key).Elem(); elem.IsValid() {
+
+				t := elem.Type()
+				// If the type is struct but not time.Time or is a map
+				if (t.Kind() == reflect.Struct && t != reflect.TypeOf(time.Time{})) || t.Kind() == reflect.Map {
+					// Then we need to call this function again to fetch the sub value
+					subRes, err := ToM(rv.MapIndex(key).Interface())
+					if err != nil {
+						return nil, err
+					}
+					res[key.String()] = subRes
+
+					// Skip the rest
+					continue
+				}
 			}
 
 			// If the type is time.Time or is not struct and map then put it in the result directly
