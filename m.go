@@ -91,7 +91,14 @@ func ToM(data interface{}) (M, error) {
 			}
 
 			// If the type is time.Time or is not struct and map then put it in the result directly
-			res[f.Name] = rv.Field(i).Interface()
+			func() {
+				defer func() {
+					if rec := recover(); rec != nil {
+						//-- currently do nothing
+					}
+				}()
+				res[f.Name] = rv.Field(i).Interface()
+			}()
 		}
 
 		// Return the result
@@ -102,7 +109,7 @@ func ToM(data interface{}) (M, error) {
 		for _, key := range rv.MapKeys() {
 
 			// Get the map value type of the specified key
-			if elem := rv.MapIndex(key).Elem(); elem.IsValid() {
+			if elem := reflect.Indirect(rv.MapIndex(key)); elem.IsValid() {
 
 				t := elem.Type()
 				// If the type is struct but not time.Time or is a map
