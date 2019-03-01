@@ -16,6 +16,16 @@ type logItem struct {
 	Msg     string
 }
 
+type LevelBit int
+
+const (
+	AllLevel     int = 0
+	InfoLevel        = 1
+	WarningLevel     = 2
+	ErrorLevel       = 3
+	DebugLevel       = 4
+)
+
 type LogEngine struct {
 	LogToStdOut     bool
 	LogToFile       bool
@@ -26,15 +36,21 @@ type LogEngine struct {
 	logInfo  *log.Logger
 	logWarn  *log.Logger
 	logError *log.Logger
+	logDebug *log.Logger
 
 	chanLogItem chan logItem
 	fileNames   map[string]string
 	writers     map[string]*os.File
 	hooks       map[string][]func(string, string)
 
+	stdOutLevels  []bool
+	fileOutLevels []bool
+
 	//logFile         *log.Logger
 	//logFileHandler  *os.File
 }
+
+type LogFields map[string]interface{}
 
 func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, useDateFormate string) (*LogEngine, error) {
 	var e error
@@ -45,6 +61,12 @@ func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, use
 	l.FileNamePattern = fileNamePattern
 	l.UseDateFormat = useDateFormate
 	//l.logger = log.New(out, prefix, flag)
+
+	l.stdOutLevels = make([]bool, 5)
+	l.fileOutLevels = make([]bool, 5)
+
+	l.stdOutLevels[AllLevel] = true
+	l.fileOutLevels[AllLevel] = true
 
 	e = l.initLogger()
 	if e != nil {
@@ -70,6 +92,7 @@ func (l *LogEngine) initLogger() error {
 		l.logError = log.New(os.Stdout, "ERROR ", log.Ldate|log.Ltime)
 		l.logInfo = log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
 		l.logWarn = log.New(os.Stdout, "WARNING ", log.Ldate|log.Ltime)
+		l.logDebug = log.New(os.Stdout, "DEBUG ", log.Ldate|log.Ltime)
 	}
 
 	l.fileNames = map[string]string{}
@@ -78,16 +101,40 @@ func (l *LogEngine) initLogger() error {
 	return nil
 }
 
+func (l *LogEngine) SetLevelStdOut(level int, value bool) {
+	if level != AllLevel {
+		l.stdOutLevels[AllLevel] = false
+	}
+	l.stdOutLevels[level] = value
+}
+
+func (l *LogEngine) SetLevelFile(level int, value bool) {
+	if level != AllLevel {
+		l.fileOutLevels[AllLevel] = false
+	}
+	l.fileOutLevels[level] = value
+}
+
+func (l *LogEngine) StdOutLevel(level int) bool {
+	return l.stdOutLevels[level]
+}
+
+func (l *LogEngine) FileOutLevel(level int) bool {
+	return l.fileOutLevels[level]
+}
+
 func (l *LogEngine) AddLog(msg string, logtype string) error {
 	var e error
 	logtype = strings.ToUpper(logtype)
 
 	if l.LogToStdOut {
-		if logtype == "ERROR" {
+		if logtype == "ERROR" && (l.StdOutLevel(AllLevel) || l.StdOutLevel(ErrorLevel)) {
 			l.logError.Println(msg)
-		} else if logtype == "WARNING" {
+		} else if logtype == "WARNING" && (l.StdOutLevel(AllLevel) || l.StdOutLevel(WarningLevel)) {
 			l.logWarn.Println(msg)
-		} else {
+		} else if logtype == "DEBUG" && (l.StdOutLevel(AllLevel) || l.StdOutLevel(DebugLevel)) {
+			l.logDebug.Println(msg)
+		} else if logtype == "INFO" && (l.StdOutLevel(AllLevel) || l.StdOutLevel(InfoLevel)) {
 			l.logInfo.Println(msg)
 		}
 		if e != nil {
@@ -111,6 +158,16 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 }
 
 func (l *LogEngine) writeLogToFile(msg, logtype string) {
+	if logtype == "ERROR" && !l.FileOutLevel(AllLevel) && !l.FileOutLevel(ErrorLevel) {
+		return
+	} else if logtype == "WARNING" && !l.FileOutLevel(AllLevel) && !l.FileOutLevel(WarningLevel) {
+		return
+	} else if logtype == "INFO" && !l.FileOutLevel(AllLevel) && !l.FileOutLevel(InfoLevel) {
+		return
+	} else if logtype == "DEBUG" && !l.FileOutLevel(AllLevel) && !l.FileOutLevel(DebugLevel) {
+		return
+	}
+
 	filename := l.FileNamePattern
 	if l.UseDateFormat != "" && strings.Contains(l.FileNamePattern, "$DATE") {
 		filename = strings.Replace(l.FileNamePattern, "$DATE", Date2String(time.Now(), l.UseDateFormat), -1)
@@ -140,7 +197,7 @@ func (l *LogEngine) writeLogToFile(msg, logtype string) {
 
 func (l *LogEngine) AddHook(fn func(string, string), logtypes ...string) {
 	if len(logtypes) == 0 {
-		logtypes = []string{"ERROR", "INFO", "WARNING"}
+		logtypes = []string{"ERROR", "INFO", "WARNING", "DEBUG"}
 	}
 
 	for _, logtype := range logtypes {
@@ -148,6 +205,10 @@ func (l *LogEngine) AddHook(fn func(string, string), logtypes ...string) {
 		hooks = append(hooks, fn)
 		l.hooks[logtype] = hooks
 	}
+}
+
+func (l *LogEngine) Debug(msg string) error {
+	return l.AddLog(msg, "DEBUG")
 }
 
 func (l *LogEngine) Info(msg string) error {
@@ -177,6 +238,11 @@ func (l *LogEngine) Warningf(msg string, args ...interface{}) error {
 	return l.AddLog(msg, "WARNING")
 }
 
+func (l *LogEngine) Debugf(msg string, args ...interface{}) error {
+	msg = Sprintf(msg, args...)
+	return l.AddLog(msg, "DEBUG")
+}
+
 func (l *LogEngine) Close() {
 	//l.logFileHandler.Close()
 	for _, w := range l.writers {
@@ -186,4 +252,18 @@ func (l *LogEngine) Close() {
 	if l.chanLogItem != nil {
 		close(l.chanLogItem)
 	}
+}
+
+func LogM(m M, msg string) string {
+	return Sprintf("field:%s message:%s",
+		JsonString(m), msg)
+}
+
+var _logger *LogEngine
+
+func Logger() *LogEngine {
+	if _logger == nil {
+		_logger, _ = NewLog(true, false, "", "", "")
+	}
+	return _logger
 }
