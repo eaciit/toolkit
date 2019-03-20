@@ -47,24 +47,21 @@ func (m M) GetRef(k string, d, out interface{}) {
 	valout.Elem().Set(valget)
 }
 
+const (
+	CaseAsIs  string = ""
+	CaseUpper        = "upper"
+	CaseLower        = "lower"
+)
+
+func ToMCase(data interface{}, casePattern string) (M, error) {
+	return tom(data, casePattern)
+}
+
 func ToM(data interface{}) (M, error) {
-	/*
-		buffer := []byte{}
-		buff := bytes.NewBuffer(buffer)
-		encoder := json.NewEncoder(buff)
-		err := encoder.Encode(v)
-		if err != nil {
-			return nil, err
-		}
-		decoder := json.NewDecoder(buff)
-		decoder.UseNumber()
-		res := M{}
-		err = decoder.Decode(&res)
-		if err != nil {
-			return nil, err
-		}
-		return res, nil
-	*/
+	return tom(data, CaseLower)
+}
+
+func tom(data interface{}, namePattern string) (M, error) {
 	rv := reflect.Indirect(reflect.ValueOf(data))
 	// Create emapty map as a result
 	res := M{}
@@ -83,10 +80,18 @@ func ToM(data interface{}) (M, error) {
 				continue
 			}
 
+			switch namePattern {
+			case CaseLower:
+				fieldName = strings.ToLower(fieldName)
+
+			case CaseUpper:
+				fieldName = strings.ToUpper(fieldName)
+			}
+
 			// If the type is struct but not time.Time or is a map
 			if (f.Type.Kind() == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || f.Type.Kind() == reflect.Map {
 				// Then we need to call this function again to fetch the sub value
-				subRes, err := ToM(rv.Field(i).Interface())
+				subRes, err := tom(rv.Field(i).Interface(), namePattern)
 				if err != nil {
 					return nil, err
 				}
@@ -122,7 +127,7 @@ func ToM(data interface{}) (M, error) {
 				// If the type is struct but not time.Time or is a map
 				if (t.Kind() == reflect.Struct && t != reflect.TypeOf(time.Time{})) || t.Kind() == reflect.Map {
 					// Then we need to call this function again to fetch the sub value
-					subRes, err := ToM(rv.MapIndex(key).Interface())
+					subRes, err := tom(rv.MapIndex(key).Interface(), namePattern)
 					if err != nil {
 						return nil, err
 					}
