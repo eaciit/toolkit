@@ -46,27 +46,29 @@ type LogEngine struct {
 	stdOutLevels  []bool
 	fileOutLevels []bool
 
+	prefix string
+
 	//logFile         *log.Logger
 	//logFileHandler  *os.File
 }
 
 type LogFields map[string]interface{}
 
-func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, useDateFormate string) (*LogEngine, error) {
+func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, useDateFormat string) (*LogEngine, error) {
 	var e error
 	l := new(LogEngine)
 	l.LogToStdOut = toStdOut
 	l.LogToFile = toFile
 	l.Path = path
 	l.FileNamePattern = fileNamePattern
-	l.UseDateFormat = useDateFormate
+	l.UseDateFormat = useDateFormat
 	//l.logger = log.New(out, prefix, flag)
 
 	l.stdOutLevels = make([]bool, 5)
 	l.fileOutLevels = make([]bool, 5)
 
-	l.stdOutLevels[AllLevel] = true
-	l.fileOutLevels[AllLevel] = true
+	l.SetLevelStdOuts(InfoLevel, WarningLevel, ErrorLevel)
+	l.SetLevelFiles(InfoLevel, WarningLevel, ErrorLevel)
 
 	e = l.initLogger()
 	if e != nil {
@@ -86,33 +88,91 @@ func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, use
 	return l, nil
 }
 
+func NewLogEngine(toStdOut bool, toFile bool, path string, fileNamePattern string, useDateFormat string) *LogEngine {
+	l, _ := NewLog(toStdOut, toFile, path, fileNamePattern, useDateFormat)
+	return l
+}
+
 func (l *LogEngine) initLogger() error {
 	//var e error = nil
-	if l.LogToStdOut {
-		l.logError = log.New(os.Stdout, "ERROR ", log.Ldate|log.Ltime)
-		l.logInfo = log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
-		l.logWarn = log.New(os.Stdout, "WARNING ", log.Ldate|log.Ltime)
-		l.logDebug = log.New(os.Stdout, "DEBUG ", log.Ldate|log.Ltime)
-	}
-
+	l.initStdOut()
 	l.fileNames = map[string]string{}
 	l.writers = map[string]*os.File{}
 	l.hooks = map[string][]func(string, string){}
 	return nil
 }
 
-func (l *LogEngine) SetLevelStdOut(level int, value bool) {
+func (l *LogEngine) initStdOut() {
+	if l.LogToStdOut {
+		if l.prefix == "" {
+			l.logError = log.New(os.Stdout, "ERROR ", log.Ldate|log.Ltime)
+			l.logInfo = log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
+			l.logWarn = log.New(os.Stdout, "WARNING ", log.Ldate|log.Ltime)
+			l.logDebug = log.New(os.Stdout, "DEBUG ", log.Ldate|log.Ltime)
+		} else {
+			l.logError = log.New(os.Stdout, l.prefix+" ERROR ", log.Ldate|log.Ltime)
+			l.logInfo = log.New(os.Stdout, l.prefix+" INFO ", log.Ldate|log.Ltime)
+			l.logWarn = log.New(os.Stdout, l.prefix+" WARNING ", log.Ldate|log.Ltime)
+			l.logDebug = log.New(os.Stdout, l.prefix+" DEBUG ", log.Ldate|log.Ltime)
+		}
+	}
+}
+
+func (l *LogEngine) SetPrefix(s string) *LogEngine {
+	l.prefix = s
+	l.initStdOut()
+	return l
+}
+
+func (l *LogEngine) Prefix() string {
+	return l.prefix
+}
+
+func (l *LogEngine) SetLevelStdOuts(levels ...int) *LogEngine {
+	for i := range []int{0, 1, 2, 3, 4} {
+		l.stdOutLevels[i] = false
+	}
+
+	for _, level := range levels {
+		if level != AllLevel {
+			l.stdOutLevels[AllLevel] = false
+		}
+		l.stdOutLevels[level] = true
+	}
+
+	return l
+}
+
+func (l *LogEngine) SetLevelStdOut(level int, value bool) *LogEngine {
 	if level != AllLevel {
 		l.stdOutLevels[AllLevel] = false
 	}
 	l.stdOutLevels[level] = value
+	return l
 }
 
-func (l *LogEngine) SetLevelFile(level int, value bool) {
+func (l *LogEngine) SetLevelFiles(levels ...int) *LogEngine {
+	for i := range []int{0, 1, 2, 3, 4} {
+		l.fileOutLevels[i] = false
+	}
+
+	for _, level := range levels {
+		if level != AllLevel {
+			l.fileOutLevels[AllLevel] = false
+		}
+		l.fileOutLevels[level] = true
+	}
+
+	return l
+}
+
+func (l *LogEngine) SetLevelFile(level int, value bool) *LogEngine {
 	if level != AllLevel {
 		l.fileOutLevels[AllLevel] = false
 	}
 	l.fileOutLevels[level] = value
+
+	return l
 }
 
 func (l *LogEngine) StdOutLevel(level int) bool {
@@ -191,8 +251,14 @@ func (l *LogEngine) writeLogToFile(msg, logtype string) {
 		l.fileNames[logtype] = filename
 		l.writers[logtype] = f
 	}
-	logFile := log.New(l.writers[logtype], logtype+" ", log.Ldate|log.Ltime)
-	logFile.Println(msg)
+
+	if l.prefix == "" {
+		logFile := log.New(l.writers[logtype], logtype+" ", log.Ldate|log.Ltime)
+		logFile.Println(msg)
+	} else {
+		logFile := log.New(l.writers[logtype], l.prefix+" "+logtype+" ", log.Ldate|log.Ltime)
+		logFile.Println(msg)
+	}
 }
 
 func (l *LogEngine) AddHook(fn func(string, string), logtypes ...string) {

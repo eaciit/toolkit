@@ -75,6 +75,13 @@ func ToM(data interface{}) (M, error) {
 		for i := 0; i < rv.NumField(); i++ {
 			// Get the field type
 			f := rv.Type().Field(i)
+			fieldName := f.Name
+			if f.Tag.Get("ecname") != "" {
+				fieldName = f.Tag.Get("ecname")
+			}
+			if fieldName == "-" {
+				continue
+			}
 
 			// If the type is struct but not time.Time or is a map
 			if (f.Type.Kind() == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || f.Type.Kind() == reflect.Map {
@@ -84,7 +91,7 @@ func ToM(data interface{}) (M, error) {
 					return nil, err
 				}
 
-				res[f.Name] = subRes
+				res[fieldName] = subRes
 
 				// Skip the rest
 				continue
@@ -97,7 +104,7 @@ func ToM(data interface{}) (M, error) {
 						//-- currently do nothing
 					}
 				}()
-				res[f.Name] = rv.Field(i).Interface()
+				res[fieldName] = rv.Field(i).Interface()
 			}()
 		}
 
