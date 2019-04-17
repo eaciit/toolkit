@@ -20,6 +20,26 @@ func (m M) Set(k string, v interface{}) M {
 	return m
 }
 
+func (m M) PathSet(k string, v interface{}, pathDelim string) M {
+	doms := strings.Split(k, pathDelim)
+	//Logger().Debugf("key:%s doms:%s", k, JsonString(doms))
+	if len(doms) == 1 {
+		//Logger().Debugf("Set %s to %v", k, v)
+		m.Set(doms[0], v)
+	} else if len(doms) > 1 {
+		map0 := M{}
+		dom0 := m.Get(doms[0])
+		if reflect.Indirect(reflect.ValueOf(dom0)).Kind() == reflect.Map {
+			map0, _ = ToM(dom0)
+		}
+		map0.PathSet(strings.Join(doms[1:], pathDelim), v, pathDelim)
+		//Logger().Debugf("Iterate child %s to v", k, v)
+		m.Set(doms[0], map0)
+	}
+	//Logger().Debugf("M: %s", JsonString(m))
+	return m
+}
+
 func (m M) Get(k string, d ...interface{}) interface{} {
 	if get, b := m[k]; b {
 		if IsNilOrEmpty(get) && len(d) > 0 {
