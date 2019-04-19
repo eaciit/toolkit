@@ -4,6 +4,7 @@ import (
 
 	//"io"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-type logItem struct {
+type LogItem struct {
 	LogType string
 	Msg     string
 }
@@ -38,7 +39,7 @@ type LogEngine struct {
 	logError *log.Logger
 	logDebug *log.Logger
 
-	chanLogItem chan logItem
+	chanLogItem chan LogItem
 	fileNames   map[string]string
 	writers     map[string]*os.File
 	hooks       map[string][]func(string, string)
@@ -46,13 +47,14 @@ type LogEngine struct {
 	stdOutLevels  []bool
 	fileOutLevels []bool
 
-	prefix string
+	prefix     string
+	fnTemplate func(LogItem) string
 
 	//logFile         *log.Logger
 	//logFileHandler  *os.File
 }
 
-type LogFields map[string]interface{}
+//type LogFields map[string]interface{}
 
 func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, useDateFormat string) (*LogEngine, error) {
 	var e error
@@ -76,7 +78,7 @@ func NewLog(toStdOut bool, toFile bool, path string, fileNamePattern string, use
 	}
 
 	if l.LogToFile {
-		l.chanLogItem = make(chan logItem)
+		l.chanLogItem = make(chan LogItem)
 
 		go func() {
 			for li := range l.chanLogItem {
@@ -104,18 +106,50 @@ func (l *LogEngine) initLogger() error {
 
 func (l *LogEngine) initStdOut() {
 	if l.LogToStdOut {
-		if l.prefix == "" {
-			l.logError = log.New(os.Stdout, "ERROR ", log.Ldate|log.Ltime)
-			l.logInfo = log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
-			l.logWarn = log.New(os.Stdout, "WARNING ", log.Ldate|log.Ltime)
-			l.logDebug = log.New(os.Stdout, "DEBUG ", log.Ldate|log.Ltime)
-		} else {
-			l.logError = log.New(os.Stdout, l.prefix+" ERROR ", log.Ldate|log.Ltime)
-			l.logInfo = log.New(os.Stdout, l.prefix+" INFO ", log.Ldate|log.Ltime)
-			l.logWarn = log.New(os.Stdout, l.prefix+" WARNING ", log.Ldate|log.Ltime)
-			l.logDebug = log.New(os.Stdout, l.prefix+" DEBUG ", log.Ldate|log.Ltime)
-		}
+		l.logError = prepareStdoutLogger(l, "ERROR")
+		l.logInfo = prepareStdoutLogger(l, "INFO")
+		l.logWarn = prepareStdoutLogger(l, "WARNING")
+		l.logDebug = prepareStdoutLogger(l, "DEBUG")
 	}
+}
+
+func prepareStdoutLogger(l *LogEngine, logType string) *log.Logger {
+	logger := new(log.Logger)
+	logger.SetFlags(0)
+
+	w := new(LogWriter)
+	w.initialItem = LogItem{}
+	w.initialItem.LogType = logType
+	msg := l.prefix
+	if l.fnTemplate == nil {
+		if msg != "" {
+			msg += " "
+		}
+		msg += "{TIME} "
+		msg += logType
+		msg += " {MSG}"
+
+		w.fn = func(item LogItem) string {
+			fmtMsg := msg
+			fmtMsg = strings.Replace(fmtMsg, "{TIME}", time.Now().Format(time.RFC3339), -1)
+			fmtMsg = strings.Replace(fmtMsg, "{MSG}", item.Msg, -1)
+			return fmtMsg
+		}
+	} else {
+		w.fn = l.fnTemplate
+	}
+
+	logger.SetOutput(w)
+	return logger
+}
+
+func (l *LogEngine) SetStdoutTemplate(fnTemplate func(LogItem) string) {
+	l.fnTemplate = fnTemplate
+	l.initStdOut()
+}
+
+func (l *LogEngine) HasTemplate() bool {
+	return l.fnTemplate != nil
 }
 
 func (l *LogEngine) SetPrefix(s string) *LogEngine {
@@ -203,7 +237,7 @@ func (l *LogEngine) AddLog(msg string, logtype string) error {
 	}
 
 	if l.LogToFile {
-		l.chanLogItem <- logItem{logtype, msg}
+		l.chanLogItem <- LogItem{logtype, msg}
 	}
 
 	//--- run hook
@@ -332,4 +366,15 @@ func Logger() *LogEngine {
 		_logger, _ = NewLog(true, false, "", "", "")
 	}
 	return _logger
+}
+
+type LogWriter struct {
+	initialItem LogItem
+	fn          func(item LogItem) string
+}
+
+func (w *LogWriter) Write(bs []byte) (int, error) {
+	item := w.initialItem
+	item.Msg = string(bs)
+	return fmt.Print(w.fn(item))
 }
