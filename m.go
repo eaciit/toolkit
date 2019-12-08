@@ -81,7 +81,28 @@ func ToM(data interface{}) (M, error) {
 	return tom(data, CaseLower)
 }
 
+func ToMTag(data interface{}, tagName string) (M, error) {
+	return tomTagName(data, CaseLower, tagName)
+}
+
+var _tagName string
+
+func TagName() string {
+	if _tagName == "" {
+		_tagName = "ecnmae"
+	}
+	return _tagName
+}
+
+func SetTagName(name string) {
+	_tagName = name
+}
+
 func tom(data interface{}, namePattern string) (M, error) {
+	return tomTagName(data, namePattern, TagName())
+}
+
+func tomTagName(data interface{}, namePattern string, tagName string) (M, error) {
 	rv := reflect.Indirect(reflect.ValueOf(data))
 	// Create emapty map as a result
 	res := M{}
@@ -93,8 +114,8 @@ func tom(data interface{}, namePattern string) (M, error) {
 			// Get the field type
 			f := rv.Type().Field(i)
 			fieldName := f.Name
-			if f.Tag.Get("ecname") != "" {
-				fieldName = f.Tag.Get("ecname")
+			if f.Tag.Get(tagName) != "" {
+				fieldName = f.Tag.Get(tagName)
 			}
 			if fieldName == "-" {
 				continue
