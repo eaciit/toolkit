@@ -89,7 +89,7 @@ var _tagName string
 
 func TagName() string {
 	if _tagName == "" {
-		_tagName = "ecnmae"
+		_tagName = "ecname"
 	}
 	return _tagName
 }
