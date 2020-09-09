@@ -1,7 +1,6 @@
 package toolkit
 
 import (
-	"encoding/gob"
 	"errors"
 	"reflect"
 	"strings"
@@ -13,13 +12,15 @@ var gobs []string
 type G interface{}
 
 func RegisterGobObject(o interface{}) {
-	name := reflect.ValueOf(o).Type().Name()
-	if HasMember(gobs, name) {
-		return
-	}
+	/*
+		name := reflect.ValueOf(o).Type().Name()
+		if HasMember(gobs, name) {
+			return
+		}
 
-	gob.Register(o)
-	gobs = append(gobs, name)
+		gob.Register(o)
+		gobs = append(gobs, name)
+	*/
 }
 
 func TypeName(o interface{}) string {

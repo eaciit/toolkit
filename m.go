@@ -73,12 +73,16 @@ const (
 	CaseLower        = "lower"
 )
 
+var (
+	DefaultCase = CaseAsIs
+)
+
 func ToMCase(data interface{}, casePattern string) (M, error) {
 	return tom(data, casePattern)
 }
 
 func ToM(data interface{}) (M, error) {
-	return tom(data, CaseLower)
+	return tom(data, DefaultCase)
 }
 
 func ToMTag(data interface{}, tagName string) (M, error) {
@@ -89,7 +93,7 @@ var _tagName string
 
 func TagName() string {
 	if _tagName == "" {
-		_tagName = "ecname"
+		_tagName = "json"
 	}
 	return _tagName
 }

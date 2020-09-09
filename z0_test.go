@@ -1,11 +1,12 @@
-package toolkittest
+package toolkit_test
 
 import (
-	. "github.com/eaciit/toolkit"
 	"math"
 	"os"
 	"testing"
 	"time"
+
+	. "github.com/eaciit/toolkit"
 )
 
 func killApp(code int) {
