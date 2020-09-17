@@ -86,7 +86,7 @@ func ToM(data interface{}) (M, error) {
 }
 
 func ToMTag(data interface{}, tagName string) (M, error) {
-	return tomTagName(data, CaseLower, tagName)
+	return tomTagName(data, DefaultCase, tagName)
 }
 
 var _tagName string
