@@ -119,7 +119,7 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 			f := rv.Type().Field(i)
 			fieldName := f.Name
 			if f.Tag.Get(tagName) != "" {
-				fieldName = f.Tag.Get(tagName)
+				fieldName = strings.Split(f.Tag.Get(tagName), ",")[0]
 			}
 			if fieldName == "-" {
 				continue
