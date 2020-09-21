@@ -86,7 +86,7 @@ func ToM(data interface{}) (M, error) {
 }
 
 func ToMTag(data interface{}, tagName string) (M, error) {
-	return tomTagName(data, CaseLower, tagName)
+	return tomTagName(data, DefaultCase, tagName)
 }
 
 var _tagName string
@@ -134,9 +134,13 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 			}
 
 			// If the type is struct but not time.Time or is a map
-			if (f.Type.Kind() == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || f.Type.Kind() == reflect.Map {
+			kind := f.Type.Kind()
+			if kind == reflect.Ptr {
+				kind = f.Type.Elem().Kind()
+			}
+			if (kind == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || kind == reflect.Map {
 				// Then we need to call this function again to fetch the sub value
-				subRes, err := tom(rv.Field(i).Interface(), namePattern)
+				subRes, err := tomTagName(rv.Field(i).Interface(), namePattern, tagName)
 				if err != nil {
 					return nil, err
 				}
