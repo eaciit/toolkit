@@ -268,7 +268,7 @@ func (m M) GetFloat32(k string) float32 {
 }
 
 func (m M) GetBool(k string) bool {
-	b := strings.ToLower(m.GetString(k, ""))
+	b := strings.ToLower(m.GetString(k))
 	return b == "1" || b == "true" || b == "y" || b == "t" || b == "yes"
 }
 
