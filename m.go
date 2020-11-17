@@ -267,6 +267,11 @@ func (m M) GetFloat32(k string) float32 {
 	return ToFloat32(i, 6, RoundingAuto)
 }
 
+func (m M) GetBool(k string) bool {
+	b := strings.ToLower(m.GetString(k, ""))
+	return b == "1" || b == "true" || b == "y" || b == "t" || b == "yes"
+}
+
 func (m M) Has(k string) bool {
 	_, has := m[k]
 	return has
