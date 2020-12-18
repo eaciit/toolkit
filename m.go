@@ -142,17 +142,35 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 			kind := f.Type.Kind()
 			if kind == reflect.Ptr {
 				kind = f.Type.Elem().Kind()
-			}
-			if (kind == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || kind == reflect.Map {
+			} else if (kind == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || kind == reflect.Map {
 				// Then we need to call this function again to fetch the sub value
 				subRes, err := tomTagName(rv.Field(i).Interface(), namePattern, tagName)
 				if err != nil {
 					return nil, err
 				}
-
 				res[fieldName] = subRes
-
 				// Skip the rest
+				continue
+			} else if kind == reflect.Slice {
+				slice := rv.Field(i)
+				count := slice.Len()
+				elemType := slice.Type().Elem().Kind()
+				switch elemType {
+				case reflect.Map, reflect.Struct, reflect.Ptr, reflect.Slice:
+					ms := make([]M, count)
+					for si := 0; si < count; si++ {
+						data := slice.Index(si)
+						datam, err := tomTagName(data.Interface(), namePattern, tagName)
+						if err != nil {
+							return nil, err
+						}
+						ms[si] = datam
+					}
+					res[fieldName] = ms
+
+				default:
+					res[fieldName] = slice.Interface()
+				}
 				continue
 			}
 
@@ -176,7 +194,6 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 
 			// Get the map value type of the specified key
 			if elem := reflect.Indirect(rv.MapIndex(key)); elem.IsValid() {
-
 				t := elem.Type()
 				// If the type is struct but not time.Time or is a map
 				if (t.Kind() == reflect.Struct && t != reflect.TypeOf(time.Time{})) || t.Kind() == reflect.Map {
@@ -191,7 +208,6 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 					continue
 				}
 			}
-
 			// If the type is time.Time or is not struct and map then put it in the result directly
 			res[key.String()] = rv.MapIndex(key).Interface()
 		}
@@ -340,4 +356,14 @@ func CopyM(from, to *M,
 		}
 	}
 	*to = tom
+}
+
+func (m M) Merge(from M, overwrite bool) {
+	for k, v := range from {
+		_, ok := m[k]
+		if ok && !overwrite {
+			continue
+		}
+		m[k] = v
+	}
 }
