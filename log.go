@@ -356,7 +356,7 @@ func (l *LogEngine) Close() {
 
 // Error2 will send msg1 to system log and msg2 to output, it could be useful for logging something that can only be seen by sysadmin and user
 func (l *LogEngine) Error2(msg1, msg2 string) error {
-	l.AddLog(msg2, "ERROR")
+	l.AddLog(msg1, "ERROR")
 	return errors.New(msg2)
 }
 
