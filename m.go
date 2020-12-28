@@ -119,9 +119,11 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 			f := rv.Type().Field(i)
 			fieldName := f.Name
 			fieldTagNames := strings.Split(f.Tag.Get(tagName), ",")
-			if len(fieldTagNames) > 1 && fieldTagNames[1] == "omitempty" {
-				continue
-			}
+			/*
+				if len(fieldTagNames) > 1 && fieldTagNames[1] == "omitempty" &&  f {
+					continue
+				}
+			*/
 			fieldTagName := fieldTagNames[0]
 			if fieldTagName != "" {
 				fieldName = fieldTagName
