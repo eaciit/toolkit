@@ -20,6 +20,21 @@ func (m M) Set(k string, v interface{}) M {
 	return m
 }
 
+func (m M) Sets(vs ...interface{}) M {
+	k := ""
+	for i, v := range vs {
+		if i%2 == 0 {
+			k, _ = v.(string)
+		} else {
+			if k != "" {
+				m.Set(k, v)
+				k = ""
+			}
+		}
+	}
+	return m
+}
+
 func (m M) PathSet(k string, v interface{}, pathDelim string) M {
 	doms := strings.Split(k, pathDelim)
 	//Logger().Debugf("key:%s doms:%s", k, JsonString(doms))
