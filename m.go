@@ -135,13 +135,16 @@ func tomTagName(data interface{}, namePattern string, tagName string) (M, error)
 
 			// If the type is struct but not time.Time or is a map
 			if (f.Type.Kind() == reflect.Struct && f.Type != reflect.TypeOf(time.Time{})) || f.Type.Kind() == reflect.Map {
+				
 				// Then we need to call this function again to fetch the sub value
-				subRes, err := tom(rv.Field(i).Interface(), namePattern)
-				if err != nil {
-					return nil, err
-				}
+				if rv.Field(i).CanInterface() {
+					subRes, err := tom(rv.Field(i).Interface(), namePattern)
+					if err != nil {
+						return nil, err
+					}
 
-				res[fieldName] = subRes
+					res[fieldName] = subRes
+				}
 
 				// Skip the rest
 				continue
