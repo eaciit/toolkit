@@ -88,7 +88,7 @@ func Compare(v1 interface{}, v2 interface{}, op string) bool {
 	t1 := strings.ToLower(TypeName(v1))
 	t2 := strings.ToLower(TypeName(v2))
 
-	if strings.Contains(t1, "int") || strings.Contains(t1, "float") || strings.Contains(t1, "number") {
+	if (t1 != "interface{}") && (strings.Contains(t1, "int") || strings.Contains(t1, "float") || strings.Contains(t1, "number")) {
 		//--- is a number
 		// lets convert all to float64 for simplicity
 		var vv1o, vv2o float64
