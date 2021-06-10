@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"math"
 	"math/rand"
 	"sync"
 	"time"
@@ -36,8 +37,12 @@ func RandInt(limit int) int {
 }
 
 func RandFloat(limit int, decimal int) float64 {
+	flim := float64(limit)
+	fdec := float64(decimal)
 	initRandomSource()
-	return float64(r.Intn(limit+decimal)) / float64(10*decimal)
+	powerLimit := int(flim * math.Pow(10, fdec))
+	randPower := r.Intn(powerLimit)
+	return float64(randPower) / math.Pow(10, fdec)
 }
 
 func Div(f1, f2 float64) float64 {
